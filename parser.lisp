@@ -2,21 +2,18 @@
 
 (defvar *root-path* (system-relative-pathname :muse ""))
 
-(defparameter *lastfm-artist-page* "https://www.last.fm/music/~A")
-(defparameter *test-artist-page*
-  (namestring (merge-pathnames "test_pages/music/~A/main.html"
-                               *root-path*)))
-(defparameter *artist-page* *lastfm-artist-page*)
+(defvar *lastfm-artist-page* "https://www.last.fm/music/~A")
+(defvar *test-artist-page*   (namestring (merge-pathnames "test_pages/music/~A/main.html" *root-path*)))
+(defvar *artist-page*        *lastfm-artist-page*)
 
-(defparameter *lastfm-album-page* "https://www.last.fm/~A")
-(defparameter *test-album-page*
-  (namestring (merge-pathnames "test_pages/music/~A.html"
-                               *root-path*)))
-(defparameter *album-page* *lastfm-album-page*)
+(defvar *lastfm-album-page*  "https://www.last.fm/~A")
+(defvar *test-album-page*    (namestring (merge-pathnames "test_pages/music/~A.html" *root-path*)))
+(defvar *album-page*         *lastfm-album-page*)
 
-(defparameter *lastfm-user-loved-url* "https://www.last.fm/user/~A/loved")
+(defvar *lastfm-user-loved-url* "https://www.last.fm/user/~A/loved")
 
 (defun parse-html (template &rest components)
+  "Give an url template and some url components, build the actual url and returned a parsed object."
   (let* ((url (eval `(format nil ,template ,@components)))
          (request (if (not (null (search "http" url)))
                       (get url)    ; Handle http requests
