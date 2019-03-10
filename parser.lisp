@@ -38,23 +38,28 @@
   (string-trim '(#\Space #\Tab #\Newline) str))
 
 (defun album-tracks (url)
-  (let ((node (parse-html url)))
-    (remove-if #'null
-               ($ node "section#tracks-section tr"
-                 (map (lambda (node)
-                        (concatenate 'list ;(song-title duration link)
-                                     ($ node "td.chartlist-name a.link-block-target" (text))
-                                     (map 'vector #'trim-whitespace
-                                          ($ node "td.chartlist-duration" (text)))
-                                     ($ node "td.chartlist-play a" (attr :href)))))))))
+  (let* ((node (parse-html url))
+         (release-date ($ node "ul.metadata-list p.metadata-display" (text)))
+         (tracks ($ node "section#tracks-section tr"
+                   (map (lambda (node)
+                          (concatenate 'list ;(song-title duration link)
+                                       ($ node "td.chartlist-name a.link-block-target" (text))
+                                       (map 'vector #'trim-whitespace
+                                            ($ node "td.chartlist-duration" (text)))
+                                       ($ node "td.chartlist-play a" (attr :href))))))))
+    (list (lastcar (split-sequence #\Space (aref release-date 0)))
+          (remove-if #'null tracks))))
+
+(with-local-htmls
+  (album-tracks (album-page "Pendragon" "Pure")))
 
 (defun artist-data (artist)
   (let ((node (parse-html *artist-page* artist)))
     (list ($ node "div.col-main li.tag" (text))
           ($ node "section div ol a.link-block-target" ;; Build a list of tracks for each of the albums
             (map (lambda (node) 
-                   (list (text node) ;album name
-                         (album-tracks (album-page artist (text node))))))))))
+                   (append (list (text node)) ;album name
+                           (album-tracks (album-page artist (text node))))))))))
 
 (defmacro with-local-htmls (&body body)
   `(let ((parser::*artist-page* parser::*test-artist-page*)
