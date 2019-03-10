@@ -20,14 +20,6 @@
                       (uiop:read-file-string url)))) ;handle local html files
     (parse request)))
 
-(defun user-loved-tracks (user)
-  (let ((node (parse-html user)))
-    ($ node "section#user-loved-tracks-section td.chartlist-play a"
-      (map (lambda (node)
-           (list (attribute node "data-artist-name")
-                 (attribute node "data-track-name")
-                 (attribute node "href")))))))
-
 (defun album-page (artist album)
   "Given an artist name and an album name, return a url with info for such an artist and album"
   (format nil *album-page*
@@ -37,7 +29,15 @@
 (defun trim-whitespace (str)
   (string-trim '(#\Space #\Tab #\Newline) str))
 
-(defun album-tracks (url)
+(defun user-loved-tracks (user)
+  (let ((node (parse-html user)))
+    ($ node "section#user-loved-tracks-section td.chartlist-play a"
+      (map (lambda (node)
+           (list (attribute node "data-artist-name")
+                 (attribute node "data-track-name")
+                 (attribute node "href")))))))
+
+(defun album-info (url)
   (let* ((node (parse-html url))
          (release-date ($ node "ul.metadata-list p.metadata-display" (text)))
          (tracks ($ node "section#tracks-section tr"
@@ -50,16 +50,13 @@
     (list (lastcar (split-sequence #\Space (aref release-date 0)))
           (remove-if #'null tracks))))
 
-(with-local-htmls
-  (album-tracks (album-page "Pendragon" "Pure")))
-
 (defun artist-data (artist)
   (let ((node (parse-html *artist-page* artist)))
     (list ($ node "div.col-main li.tag" (text))
           ($ node "section div ol a.link-block-target" ;; Build a list of tracks for each of the albums
             (map (lambda (node) 
                    (append (list (text node)) ;album name
-                           (album-tracks (album-page artist (text node))))))))))
+                           (album-info (album-page artist (text node))))))))))
 
 (defmacro with-local-htmls (&body body)
   `(let ((parser::*artist-page* parser::*test-artist-page*)
