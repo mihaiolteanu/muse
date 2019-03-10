@@ -16,39 +16,20 @@
 
 (defparameter *lastfm-user-loved-url* "https://www.last.fm/user/~A/loved")
 
-(defmacro with-lqueryed-url (template-url components query &body body)
-  (with-gensyms (url request parsed)
-    `(let* ((,url (format nil ,template-url ,@components))
-            (,request (if (not (null (search "http" ,url)))
-                          (get ,url)    ; Handle http requests
-                          (uiop:read-file-string ,url))) ;handle local html files
-            (,parsed (parse ,request)))
-       ($ ,parsed ,query ,@body))))
+(defun parse-html (template &rest components)
+  (let* ((url (eval `(format nil ,template ,@components)))
+         (request (if (not (null (search "http" url)))
+                      (get url)    ; Handle http requests
+                      (uiop:read-file-string url)))) ;handle local html files
+    (parse request)))
 
 (defun user-loved-tracks (user)
-  (with-lqueryed-url *lastfm-user-loved-url* (user)
-    "section#user-loved-tracks-section td.chartlist-play a"
-  (map (lambda (node)
+  (let ((node (parse-html user)))
+    ($ node "section#user-loved-tracks-section td.chartlist-play a"
+      (map (lambda (node)
            (list (attribute node "data-artist-name")
                  (attribute node "data-track-name")
-                 (attribute node "href"))))))
-
-(defun album-tracks (url)
-  (remove-if #'null
-    (map 'list (lambda (entry)
-                 (and (not (null entry))
-                      (mapcar (lambda (str)
-                                ;; Remove extra white space from each string
-                                (string-trim '(#\Space #\Tab #\Newline) str))
-                              entry)))
-         (with-lqueryed-url url () "section#tracks-section tr"
-           (map (lambda (node)
-                  (concatenate
-                   'list
-                   ($ node "td.chartlist-name a.link-block-target" (text)) ;Track name
-                   ($ node "td.chartlist-duration" (text))                 ;duration
-                   ($ node "td.chartlist-play a" (attr :href))             ;url (some of the tracks don't have one)
-                   )))))))
+                 (attribute node "href")))))))
 
 (defun album-page (artist album)
   "Given an artist name and an album name, return a url with info for such an artist and album"
@@ -56,17 +37,27 @@
           (format nil "~A/~A" artist
                   (substitute #\+ #\Space album))))
 
+(defun trim-whitespace (str)
+  (string-trim '(#\Space #\Tab #\Newline) str))
+
+(defun album-tracks (url)
+  (let ((node (parse-html url)))
+    (remove-if #'null
+               ($ node "section#tracks-section tr"
+                 (map (lambda (node)
+                        (concatenate 'list ;(song-title duration link)
+                                     ($ node "td.chartlist-name a.link-block-target" (text))
+                                     (map 'vector #'trim-whitespace
+                                          ($ node "td.chartlist-duration" (text)))
+                                     ($ node "td.chartlist-play a" (attr :href)))))))))
+
 (defun artist-data (artist)
-  (with-lqueryed-url *artist-page* (artist)
-      "div.col-main"
-    (map (lambda (node)
-           (list ($ node "li.tag" (text))     ;tags
-                 ($ node "section div ol a.link-block-target" ;all albums
-                   (map (lambda (node)
-                          (list (text node) ;album name
-                                ;; Build a list of tracks for each of the albums
-                                (album-tracks
-                                 (album-page artist (text node))))))))))))
+  (let ((node (parse-html *artist-page* artist)))
+    (list ($ node "div.col-main li.tag" (text))
+          ($ node "section div ol a.link-block-target" ;; Build a list of tracks for each of the albums
+            (map (lambda (node) 
+                   (list (text node) ;album name
+                         (album-tracks (album-page artist (text node))))))))))
 
 (defmacro with-local-htmls (&body body)
   `(let ((parser::*artist-page* parser::*test-artist-page*)
@@ -75,10 +66,17 @@
 
 
 (with-local-htmls
-  (aref (artist-data "Pendragon") 0))
+  (album-tracks (album-page "Pendragon" "Pure")))
 
 (with-local-htmls
-  (aref (artist-data "Lost+in+Kiev") 0))
+  (album-tracks (album-page "Lost+in+Kiev" "Nuit+Noire")))
+
+(with-local-htmls
+  (artist-data "Pendragon"))
+
+(with-local-htmls
+  (let* ((parsed (parse-html *test-artist-page* "Pendragon")))
+    ($ parsed "div.col-main li.tag" (text))))
 
 (defparameter *nuit-noire*
   (with-local-htmls
