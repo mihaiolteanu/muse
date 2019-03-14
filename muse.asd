@@ -19,8 +19,9 @@
   :entry-point "muse:main"
   :serial t
   :components ((:file "package")
-               ;; (:file "parser")
-               (:file "player")
+               (:file "objects")
+               (:file "parser")               
                (:file "persistence")
+               (:file "player")
                (:file "muse")))
 

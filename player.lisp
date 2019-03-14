@@ -1,12 +1,33 @@
 (in-package :player)
 
-(defun play-top-artist (artist)
-  (multiple-value-bind (similar genres top-tracks wiki)
-      (artist-data artist)
-    (let ((artist-tracks (map 'list (lambda (pl)
-                                      (concatenate 'string "anathema " pl))
-                              top-tracks)))
-      (dolist (song artist-tracks)
-        (uiop:run-program
-         (format nil "mpv ytdl://ytsearch:\"~A\"" song))))))
+(defvar *mpvsocket* "/tmp/muse_mpv_socket")
+
+(defun play (url)
+  (run-program
+   (format nil "mpv --input-ipc-server=~a ~A" *mpvsocket* url)))
+
+(defun mpv-command (args)
+  (launch-program
+   (eval
+    `(format nil "echo '{\"command\": [\"~A\", \"~A\"]}' | socat - ~A" ,@args *mpvsocket*))))
+
+(defun play-pause ()
+  (mpv-command '("cycle" "pause")))
+
+(defun seek (seconds)
+  (mpv-command `("seek" ,seconds)))
+
+(defun quit ()
+  (mpv-command '("quit" 0)))
+
+
+;; (quit)
+;; (play-pause)
+;; (seek 20)
+;; (play (third (first (songs "Anathema"))))
+
+
+
+;; (ql:quickload :muse)
+
 

@@ -2,9 +2,18 @@
 
 (defvar *root-path* (system-relative-pathname :muse ""))
 
+;; Parameters. For each set, both the real url (first parameter) and
+;; local test pages path (second parameter) is specified. By default,
+;; the real deal is used by the app (third parameter), but this should
+;; be overwritten for test pourposes by the second parameter.
+
 (defvar *lastfm-artist-page* "https://www.last.fm/music/~A")
 (defvar *test-artist-page*   (namestring (merge-pathnames "test_pages/music/~A/main.html" *root-path*)))
 (defvar *artist-page*        *lastfm-artist-page*)
+
+(defvar *lastfm-artist-similar* "https://www.last.fm/music/~A/+similar")
+(defvar *test-artist-similar* (namestring (merge-pathnames "test_pages/music/~A/similar.html" *root-path*)))
+(defvar *artist-similar* *lastfm-artist-similar*)
 
 (defvar *lastfm-album-page*  "https://www.last.fm/music/~A")
 (defvar *test-album-page*    (namestring (merge-pathnames "test_pages/music/~A.html" *root-path*)))
@@ -52,98 +61,26 @@
     (list (lastcar (split-sequence #\Space (aref release-date 0)))
           (remove-if #'null tracks))))
 
-(defun artist-data (artist)
+(defun biography (artist)
   (let* ((artist (substitute #\+ #\Space artist))
-         (node (parse-html *artist-page* artist)))
-    (list ($ node "div.col-main li.tag" (text)) ;tags (genres)
-          ($ node "section div ol a.link-block-target" ;; Build a list of tracks for each of the albums
-            (map (lambda (node) 
-                   (append (list (text node)) ;album name
-                           (album-info artist (text node)))))))))
+         (main-node (parse-html *artist-page* artist)) ;artist main page
+         (similar-node (parse-html *artist-similar* artist))) ;similar artist page
+    (list
+     ($ similar-node "h3.big-artist-list-title" (text))
+     ($ main-node "div.col-main li.tag" (text)) ;tags (genres)
+     ($ main-node "section div ol a.link-block-target" ;; Build a list of tracks for each of the albums
+       (map (lambda (node) 
+              (append (list (text node)) ;album name
+                      (album-info artist (text node)))))))))
+
+(with-local-htmls
+  (biography "Pendragon"))
 
 (defmacro with-local-htmls (&body body)
   `(let ((parser::*artist-page* parser::*test-artist-page*)
-         (parser::*album-page* parser::*test-album-page*))
+         (parser::*album-page* parser::*test-album-page*)
+         (parser::*artist-similar* parser::*test-artist-similar))
      ,@body))
-
-(with-local-htmls
-  (album-info "Pendragon" "Pure"))
-
-(defparameter *lost-in-kiev*
-  (with-local-htmls
-    (new-artist "Lost in Kiev")))
-
-(with-local-htmls
-  (artist-data "Lost in Kiev"))
-
-(defclass artist ()
-  ((name
-   :initarg :name
-   :accessor artist-name)
-  (genres
-   :initarg :genres
-   :accessor artist-genres)
-  (albums
-   :initarg :albums
-   :accessor artist-albums)))
-
-(defclass genre ()
-  ((name
-    :initarg :name
-    :accessor genre-name)))
-
-(defclass song ()
-  ((name
-    :initarg :name
-    :accessor song-name)
-   (url
-    :initarg :url
-    :initform nil
-    :accessor song-url)
-   (duration
-    :initarg :duration
-    :accessor song-duration)
-   (lyrics
-    :initarg :lyrics
-    :initform nil
-    :accessor song-lyrics)))
-
-(defclass album ()
-  ((name
-    :initarg :name
-    :accessor album-name)
-   (year
-    :initarg :year
-    :initform 0
-    :accessor album-year)
-   (songs
-    :initarg :songs
-    :accessor album-songs)))
-
-(defmethod print-object ((obj artist) stream)
-  (print-unreadable-object (obj stream :type nil)
-    (format stream "Artist: ~A, Genres: ~A~% ~{~A~%~}"
-            (artist-name obj)
-            (format nil "~{~A~^, ~}" (mapcar #'genre-name (artist-genres obj)))
-            (artist-albums obj))))
-
-(defmethod print-object ((obj genre) stream)
-  (print-unreadable-object (obj stream :type nil)
-    (format stream "~A" (genre-name obj))))
-
-(defmethod print-object ((obj album) stream)
-  (print-unreadable-object (obj stream :type nil)
-    (format stream "Album: ~A, Year: ~A~% ~A"
-            (album-name obj)
-            (album-year obj)
-            (album-songs obj))))
-
-(defmethod print-object ((obj song) stream)
-  (print-unreadable-object (obj stream :type nil)
-    (format stream "~A (~A) ~A"
-            (song-name obj)
-            (song-duration obj)
-            (song-url obj))))
 
 (defun new-songs (raw)
   "Create a list of song objects from raw parsed data"
@@ -162,18 +99,31 @@
                 :songs (new-songs (third album))))
        raw))
 
-(with-local-htmls
-  (artist-data "Lost in Kiev"))
-
 (defun new-artist (artist)
-  (let ((data (artist-data artist)))
+  (let ((bio (biography artist)))
     (make-instance
      'artist
      :name (substitute #\Space #\+ artist)
      :genres (map 'list (lambda (g)
                           (make-instance 'genre :name g))
-                  (first data))
-     :albums (new-albums (second data)))))
+                  (second bio))
+     :similar (first bio)
+     :albums (new-albums (third bio)))))
+
+(with-local-htmls
+  (similar "Pendragon"))
+
+(defparameter *lost-in-kiev*
+  (with-local-htmls
+    (new-artist "Lost in Kiev")))
+
+(defparameter *pendragon*
+  (with-local-htmls
+    (new-artist "Pendragon")))
+
+(with-local-htmls
+  (new-artist "Lost in Kiev"))
+
 
 
 ;; (defvar *metalstorm-url* "http://www.metalstorm.net/bands/index.php?b_where=s.style&b_what=Doom&prefix=Funeral")

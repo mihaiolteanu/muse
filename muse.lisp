@@ -2,17 +2,14 @@
 
 (define-opts
   (:name :help
-   :description "print this help text"
-   :short #\h
-   :long "help")
+   :short #\h :long "help"
+   :description "print this help text")
   (:name :play/pause
-   :description "play or pause"
-   :short #\p
-   :long "play/pause")
+   :short #\p :long "play/pause"
+   :description "play or pause")
   (:name :level
    :description "the program will run on LEVEL level"
-   :short #\l
-   :long "level"
+   :short #\l :long "level"
    :arg-parser #'parse-integer
    :meta-var "LEVEL")
   (:name :output
