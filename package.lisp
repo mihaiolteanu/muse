@@ -1,6 +1,9 @@
 (defpackage :objects
   (:use :cl)
-  (:export artist genre song album))
+  (:export artist artist-name artist-genres artist-similar artist-albums
+           genre genre-name
+           song song-name song-duration song-url song-lyrics
+           album album-name album-year album-songs))
 
 (defpackage :parser
   (:use :cl :dexador :plump :lquery :objects)
@@ -14,7 +17,7 @@
 
 (defpackage :persistence
   (:use :cl :sqlite :objects :parser)
-  (:export songs albums genres))
+  (:export songs albums genres insert-artist))
 
 (defpackage :player
   (:use :cl :uiop)

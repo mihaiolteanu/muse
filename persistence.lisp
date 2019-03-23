@@ -7,27 +7,108 @@
   "Transform '((1) (2) (3)) into '(1, 2, 3)"
   (format nil "(~{~{~A~}~^, ~})" lst))
 
-(defun songs (artist)
+(defun last-insert-rowid ()
+  (execute-single *db* "SELECT last_insert_rowid()"))
+
+(defun artist-available (artist)
+  (let ((available
+          (execute-single *db*
+            (format nil
+                    "SELECT available FROM artist WHERE EXISTS (
+                     SELECT name FROM artist
+                     where name=\"~a\")"
+                    artist))))
+    (when available
+      (= available 1))))
+
+
+;; Extract from db
+(defun retrieve (what from-where condition)
   (execute-to-list *db*
-   (format nil "SELECT * FROM artist_songs_view WHERE artist=\"~A\"" artist)))
+   (format nil "SELECT ~a FROM ~a WHERE ~a"
+           what from-where condition)))
+
+(defun songs (artist)
+  (retrieve "*" "artist_songs_view"
+            (format nil "artist=\"~a\"" artist)))
 
 (defun albums (artist)
-  (execute-to-list *db*
-   (format nil "SELECT * FROM artist_albums_view WHERE artist=\"~A\"" artist)))
+  (retrieve "*" "artist_albums_view"
+            (format nil "artist=\"~a\"" artist)))
 
 (defun genres (artist)
-  (execute-to-list *db*
-   (format nil "SELECT genre FROM artist_genres WHERE artist=\"~A\"" artist)))
+  (retrieve "genre" "artist_genres"
+            (format nil "artist=\"~a\"" artist)))
 
-(songs "anathema")
-(albums "anathema")
-(genres "anathema")
+(defun similar (artist)
+  (retrieve "similar" "artist_similar"
+            (format nil "artist=\"~a\"" artist)))
 
-(with-local-htmls
-  (new-artist "Lost in Kiev"))
 
-;; (execute-single *db* "SELECT last_insert_rowid()")
-;; (execute-non-query *db* "INSERT INTO song(id, name, url) VALUES(NULL, \"Weight\", \"https://www.youtube.com/watch?v=aAst-vyasiM\");")
-;; (execute-non-query *db* "INSERT INTO artist_songs(artist, song) VALUES (\"Antimatter\", 1)")
+;; Insert into db
+(defun execute (template &rest values)
+  (execute-non-query *db*
+   (apply #'format `(nil ,template ,@values))))
 
+(defun insert-album (artist album)
+  (execute "INSERT INTO album(name,release_date) VALUES(\"~a\", ~a)"
+           (album-name album) (album-year album))
+  (let ((album-id (last-insert-rowid)))
+    (mapcar (lambda (s)
+              (execute "INSERT INTO song(name,duration,url) VALUES(\"~a\", \"~a\", \"~a\")"
+                       (song-name s)
+                       (song-duration s)
+                       (song-url s))
+              (let ((song-id (last-insert-rowid)))
+                (execute "INSERT INTO album_songs(album_id,song_id) VALUES(~a, ~a)"
+                         album-id
+                         song-id)))
+            (album-songs album))
+    (execute "INSERT INTO artist_albums(artist,album_id) VALUES(\"~a\", ~a)"
+             artist
+             album-id)))
+
+(defun insert-albums (artist albums)
+  (mapcan (lambda (a)
+            (insert-album artist a))
+          albums))
+
+(defun insert-artist-name (name available)
+  (execute "INSERT INTO artist(name,available) VALUES(\"~a\", ~a)" name available))
+
+(defun insert-genres (names)
+  (execute "INSERT INTO genre(name) VALUES~{(\"~A\")~^,~}" names))
+
+(defun insert-genres-assoc (artist genres)
+  (declare (type (simple-array character) artist))
+  (execute "INSERT INTO artist_genres(artist,genre) VALUES~{(~{\"~A\"~^,~})~^,~}"
+              (mapcar (lambda (a)
+                     (list artist (genre-name a)))
+                   genres)))
+
+(defun insert-similar (artist artists)
+  (print artists)
+  (execute "INSERT INTO artist(name) VALUES~{(\"~A\")~^,~}" artists)
+  (execute "INSERT INTO artist_similar(artist,similar) VALUES~{(~{\"~A\"~^,~})~^,~}"
+           (mapcar (lambda (a)
+                     (list artist a))
+                   artists)))
+
+(defun insert-artist (artist)
+  (declare (artist artist))
+  (let ((name (artist-name artist)))
+    (insert-artist-name name 1)    
+    (insert-genres (mapcar #'genre-name (artist-genres artist)))
+    (insert-genres-assoc name (artist-genres artist))
+    (insert-similar name (map 'list #'identity (artist-similar artist)))
+    (insert-albums name (artist-albums artist))))
+
+(defun execute (template &rest values)
+  "Test function"
+  (print `(format t ,template ,@values))
+  (format t "~%"))
+
+(defparameter *pendragon*
+  (with-local-htmls
+    (new-artist "Pendragon")))
 
