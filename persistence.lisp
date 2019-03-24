@@ -87,7 +87,6 @@
                    genres)))
 
 (defun insert-similar (artist artists)
-  (print artists)
   (execute "INSERT INTO artist(name) VALUES~{(\"~A\")~^,~}" artists)
   (execute "INSERT INTO artist_similar(artist,similar) VALUES~{(~{\"~A\"~^,~})~^,~}"
            (mapcar (lambda (a)
@@ -97,18 +96,46 @@
 (defun insert-artist (artist)
   (declare (artist artist))
   (let ((name (artist-name artist)))
-    (insert-artist-name name 1)    
+    (insert-artist-name name 1)
+    (insert-similar name (map 'list #'identity (artist-similar artist)))
     (insert-genres (mapcar #'genre-name (artist-genres artist)))
     (insert-genres-assoc name (artist-genres artist))
-    (insert-similar name (map 'list #'identity (artist-similar artist)))
     (insert-albums name (artist-albums artist))))
 
-(defun execute (template &rest values)
-  "Test function"
-  (print `(format t ,template ,@values))
-  (format t "~%"))
 
-(defparameter *pendragon*
-  (with-local-htmls
-    (new-artist "Pendragon")))
+;; Delete from db
+(defun clean-db ()
+  (execute "DELETE FROM album_songs")  
+  (execute "DELETE FROM artist_albums")
+  (execute "DELETE FROM artist_genres")
+  (execute "DELETE FROM artist_similar")
+  (execute "DELETE FROM album")
+  ;; Reset the autoincremented id
+  (execute "DELETE FROM sqlite_sequence where name=\"album\"")
+  (execute "DELETE FROM artist")
+  (execute "DELETE FROM genre")
+  (execute "DELETE FROM song")
+  (execute "DELETE FROM sqlite_sequence where name=\"song\""))
 
+(defmacro with-test-db (&body body)
+  `(let ((persistence::*db*
+           (connect (merge-pathnames "tests/music_test.db"
+                                     (asdf:system-relative-pathname :muse "")))) )
+     ,@body
+     (clean-db)))
+
+(defun test-example ()
+  (with-test-db
+    (with-local-htmls
+      (insert-artist (new-artist "Pendragon"))
+      (insert-artist (new-artist "Lost in Kiev"))
+      (print (length (execute-to-list *db* "SELECT * from artist_similar")))
+      (clean-db))))
+
+;; (defparameter *pendragon*
+;;   (with-local-htmls
+;;     (new-artist "Pendragon")))
+
+;; (defparameter *lost+in+kiev*
+;;   (with-local-htmls
+;;     (new-artist "Lost in Kiev")))
