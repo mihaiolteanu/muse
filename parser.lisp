@@ -8,15 +8,15 @@
 ;; be overwritten for test pourposes by the second parameter.
 
 (defvar *lastfm-artist-page* "https://www.last.fm/music/~A")
-(defvar *test-artist-page*   (namestring (merge-pathnames "test_pages/music/~A/main.html" *root-path*)))
+(defvar *test-artist-page*   (namestring (merge-pathnames "tests/html/music/~A/main.html" *root-path*)))
 (defvar *artist-page*        *lastfm-artist-page*)
 
 (defvar *lastfm-artist-similar* "https://www.last.fm/music/~A/+similar")
-(defvar *test-artist-similar* (namestring (merge-pathnames "test_pages/music/~A/similar.html" *root-path*)))
+(defvar *test-artist-similar* (namestring (merge-pathnames "tests/html/music/~A/similar.html" *root-path*)))
 (defvar *artist-similar* *lastfm-artist-similar*)
 
 (defvar *lastfm-album-page*  "https://www.last.fm/music/~A")
-(defvar *test-album-page*    (namestring (merge-pathnames "test_pages/music/~A.html" *root-path*)))
+(defvar *test-album-page*    (namestring (merge-pathnames "tests/html/music/~A.html" *root-path*)))
 (defvar *album-page*         *lastfm-album-page*)
 
 (defvar *lastfm-user-loved-url* "https://www.last.fm/user/~A/loved")
@@ -73,13 +73,10 @@
               (append (list (text node)) ;album name
                       (album-info artist (text node)))))))))
 
-(with-local-htmls
-  (biography "Pendragon"))
-
 (defmacro with-local-htmls (&body body)
   `(let ((parser::*artist-page* parser::*test-artist-page*)
          (parser::*album-page* parser::*test-album-page*)
-         (parser::*artist-similar* parser::*test-artist-similar))
+         (parser::*artist-similar* parser::*test-artist-similar*))
      ,@body))
 
 (defun new-songs (raw)
@@ -109,22 +106,6 @@
                   (second bio))
      :similar (first bio)
      :albums (new-albums (third bio)))))
-
-(with-local-htmls
-  (similar "Pendragon"))
-
-(defparameter *lost-in-kiev*
-  (with-local-htmls
-    (new-artist "Lost in Kiev")))
-
-(defparameter *pendragon*
-  (with-local-htmls
-    (new-artist "Pendragon")))
-
-(with-local-htmls
-  (new-artist "Lost in Kiev"))
-
-
 
 ;; (defvar *metalstorm-url* "http://www.metalstorm.net/bands/index.php?b_where=s.style&b_what=Doom&prefix=Funeral")
 ;; (defvar *metalstorm-bands-genre-url*
