@@ -25,3 +25,10 @@
                (:file "player")
                (:file "muse")))
 
+(defsystem :muse/tests
+  :depends-on (:muse :fiveam)
+  :components ((:module "tests"
+                :serial t
+                :components ((:file "package")
+                             (:file "main"))))
+  :perform (test-op (o c) (symbol-call :fiveam '#:run! :all-tests)))
