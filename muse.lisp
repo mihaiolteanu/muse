@@ -1,59 +1,69 @@
 (in-package :muse)
 
-(define-opts
-  (:name :help
-   :short #\h :long "help"
-   :description "print this help text")
-  (:name :play/pause
-   :short #\p :long "play/pause"
-   :description "play or pause")
-  (:name :level
-   :description "the program will run on LEVEL level"
-   :short #\l :long "level"
-   :arg-parser #'parse-integer
-   :meta-var "LEVEL")
-  (:name :output
-   :description "redirect output to file FILE"
-   :short #\o
-   :long "output"
-   :arg-parser #'identity
-   :meta-var "FILE"))
+(defparameter *my-acceptor* (make-instance 'easy-acceptor :port 4007))
+(start *my-acceptor*)
 
-(defun unknown-option (condition)
-  (format t "warning: ~s option is unknown!~%" (option condition))
-  (invoke-restart 'skip-option))
+(defmacro with-html (&body body)
+  `(with-html-output-to-string (*standard-output* nil :prologue t)
+     ,@body))
 
-(defmacro when-option ((options opt) &body body)
-  `(let ((it (getf ,options ,opt)))
-     (when it
-       ,@body)))
+(defparameter *foo* 0)
+(defparameter *bar* 0)
 
-(defun main ()
-  (multiple-value-bind (options free-args)
-      (handler-case
-          (handler-bind ((unknown-option #'unknown-option))
-            (get-opts))
-        (missing-arg (condition)
-          (format t "fatal: option ~s needs an argument!~%"
-                  (option condition)))
-        (arg-parser-failed (condition)
-          (format t "fatal: cannot parse ~s as argument of ~s~%"
-                  (raw-arg condition)
-                  (option condition))))
-    (when-option (options :help)
-      (describe
-       :prefix "example — program to demonstrate unix-opts library"
-       :suffix "so that's how it works…"
-       :usage-of "example.sh"
-       :args     "[FREE-ARGS]"))
-    (when-option (options :play/pause)
-      (format t "toggling the play..."))
-    (when-option (options :level)
-      (format t "I see you've supplied level option, you want ~a level!~%" it))
-    (when-option (options :output)
-      (format t "I see you want to output the stuff to ~s!~%"
-              (getf options :output)))
-    (when (null options)
-      (print "no options given"))
-    (format t "free args: ~{~a~^, ~}~%" free-args)))
+(defun parameter-test ()
+  (setf (content-type*)
+        (format nil "text/html; charset=~A" :iso-8859-1))
+  (let ((foo (get-parameter "foo"))
+        (bar (get-parameter "bar")))
+    (setf *foo* foo)
+    (setf *bar* bar)
+    (format nil "Here is ~a" foo)))
 
+
+;; (with-output-to-string (out)
+;;   (with-html-output (out)
+;;     (loop for (url . song) in '(("https://www.youtube.com/watch?v=aiw7ha2Yziw" . "Paranova")
+;;                                 ("https://www.youtube.com/watch?v=0NTs2g0hVt8" . "Wintersun"))
+;;           do (htm (:a :href url
+;;                       (:b (str )))))))
+
+
+(defun s-artists ()
+  (with-html-output-to-string (s)
+    (:html
+     (:body
+      (:h2 "Available Artists")
+      (do ((el (artists) (rest el)))
+          ((null el))
+        (htm (:p (str (first (first el))))))
+      ))))
+
+(defun s-artist-songs ()
+  (let ((artist (get-parameter "artist")))
+    (with-html-output-to-string (s)
+      (:html
+       (:body
+        (:h2 (str (format nil "~a songs" artist)))
+        (loop for (ignore album name url duration) in (songs artist)
+              do (htm (:a :href url
+                          (:b (str name)))
+                      (str (format nil " [~a]" duration))
+                      (:hr))
+              )
+        ;; (do ((el (songs artist) (rest el)))
+        ;;     ((null el))
+        ;;   (htm (:p (str (second el)))))
+        ))))
+  )
+
+
+(setq *dispatch-table*
+      (mapcar (lambda (args)
+                (apply 'create-prefix-dispatcher args))
+              '(("/test.html" parameter-test)
+                ("/artists" s-artists)
+                ("/songs" s-artist-songs))))
+
+
+(hunchentoot:start (make-instance 'hunchentoot:easy-acceptor :port 4123))
+(asdf:oos 'asdf:load-op :hunchentoot-test)
