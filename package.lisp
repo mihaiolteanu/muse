@@ -17,7 +17,8 @@
 
 (defpackage :persistence
   (:use :cl :sqlite :objects :parser)
-  (:export songs albums genres insert-artist
+  (:export artists songs all-songs
+           albums genres insert-artist
            with-test-db))
 
 (defpackage :player
@@ -25,6 +26,6 @@
   (:export play play-pause seek quit))
 
 (defpackage :muse  
-  (:use :cl :unix-opts :player)
-  (:shadowing-import-from :unix-opts :describe)
+  (:use :cl :parser :persistence :player
+        :cl-who :hunchentoot)
   (:export main))
