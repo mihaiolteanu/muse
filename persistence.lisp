@@ -28,9 +28,15 @@
    (format nil "SELECT ~a FROM ~a WHERE ~a"
            what from-where condition)))
 
+(defun artists ()
+  (retrieve "*" "artist" "available=1"))
+
 (defun songs (artist)
-  (retrieve "*" "artist_songs_view"
-            (format nil "artist=\"~a\"" artist)))
+  (retrieve "*" "all_songs"
+            (format nil "artist=\"~a\"" (substitute #\Space #\+ artist))))
+
+(defun all-songs ()
+  (retrieve "*" "all_songs" 1))
 
 (defun albums (artist)
   (retrieve "*" "artist_albums_view"
