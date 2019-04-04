@@ -39,7 +39,7 @@
       ))))
 
 (defun s-artist-songs ()
-  (let ((artist (get-parameter "artist")))
+  (let ((artist (artist-from-uri)))
     (with-html-output-to-string (s)
       (:html
        (:body
@@ -56,13 +56,21 @@
         ))))
   )
 
+(defun artist-from-uri ()
+  (first (last (cl-utilities:split-sequence #\/ (request-uri*)))))
+
+(defun artist-info ()
+  (format nil "Info for ~a~%" (artist-from-uri)))
 
 (setq *dispatch-table*
-      (mapcar (lambda (args)
-                (apply 'create-prefix-dispatcher args))
-              '(("/test.html" parameter-test)
-                ("/artists" s-artists)
-                ("/songs" s-artist-songs))))
+      (nconc (list
+              (create-regex-dispatcher "^/artist/[a-zA-Z0-9 ]+$" 'artist-info)
+              (create-regex-dispatcher "^/songs/[a-zA-Z0-9 ]+$" 's-artist-songs)
+              )
+             (mapcar (lambda (args)
+                       (apply 'create-prefix-dispatcher args))
+                     '(("/test.html" parameter-test)
+                       ("/artists" s-artists)))))
 
 
 (hunchentoot:start (make-instance 'hunchentoot:easy-acceptor :port 4123))
