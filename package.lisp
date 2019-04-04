@@ -18,7 +18,7 @@
 (defpackage :persistence
   (:use :cl :sqlite :objects :parser)
   (:export artists songs all-songs
-           albums genres insert-artist
+           albums genres similar insert-artist
            with-test-db))
 
 (defpackage :player
