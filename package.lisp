@@ -25,7 +25,5 @@
   (:use :cl :uiop)
   (:export play play-pause seek quit))
 
-(defpackage :muse  
-  (:use :cl :parser :persistence :player
-        :cl-who :hunchentoot)
-  (:export main))
+(defpackage :server
+  (:use :cl :persistence :cl-who :hunchentoot))

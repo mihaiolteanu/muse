@@ -21,7 +21,7 @@
                (:file "parser")               
                (:file "persistence")
                (:file "player")
-               (:file "muse"))
+               (:file "server"))
   :in-order-to ((test-op (test-op "muse/tests"))))
 
 (defsystem :muse/tests

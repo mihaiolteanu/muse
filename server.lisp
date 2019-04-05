@@ -1,4 +1,4 @@
-(in-package :muse)
+(in-package :server)
 
 (defparameter *my-acceptor* (make-instance 'easy-acceptor :port 4007))
 (start *my-acceptor*)
