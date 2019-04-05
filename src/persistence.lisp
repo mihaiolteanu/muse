@@ -32,8 +32,15 @@
   (retrieve "*" "artist" "available=1"))
 
 (defun songs (artist)
-  (retrieve "*" "all_songs"
-            (format nil "artist=\"~a\"" (substitute #\Space #\+ artist))))
+  (let ((raw-songs
+          (retrieve "*" "all_songs"
+                    (format nil "artist=\"~a\"" (substitute #\Space #\+ artist)))))
+    (mapcar (lambda (song)
+              (make-instance 'song
+                :name     (third song)
+                :duration (fifth song)
+                :url      (fourth song)))
+            raw-songs)))
 
 (defun all-songs ()
   (retrieve "*" "all_songs" 1))
