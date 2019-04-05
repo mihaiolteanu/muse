@@ -7,26 +7,12 @@
   `(with-html-output-to-string (*standard-output* nil :prologue t)
      ,@body))
 
-(defparameter *foo* 0)
-(defparameter *bar* 0)
+(defun artist-from-uri ()
+  (substitute #\Space #\+
+              (first (last (cl-utilities:split-sequence #\/ (request-uri*))))))
 
-(defun parameter-test ()
-  (setf (content-type*)
-        (format nil "text/html; charset=~A" :iso-8859-1))
-  (let ((foo (get-parameter "foo"))
-        (bar (get-parameter "bar")))
-    (setf *foo* foo)
-    (setf *bar* bar)
-    (format nil "Here is ~a" foo)))
-
-
-;; (with-output-to-string (out)
-;;   (with-html-output (out)
-;;     (loop for (url . song) in '(("https://www.youtube.com/watch?v=aiw7ha2Yziw" . "Paranova")
-;;                                 ("https://www.youtube.com/watch?v=0NTs2g0hVt8" . "Wintersun"))
-;;           do (htm (:a :href url
-;;                       (:b (str )))))))
-
+(defun genre-from-uri ()
+  (first (last (cl-utilities:split-sequence #\/ (request-uri*)))))
 
 (defun s-artists ()
   (with-html-output-to-string (s)
@@ -35,8 +21,18 @@
       (:h2 "Available Artists")
       (do ((el (artists) (rest el)))
           ((null el))
-        (htm (:p (str (first (first el))))))
+        (let ((artist (first (first el))))
+          (htm (:p (:a :href (format nil "/artist/~a" (substitute #\+ #\Space artist))
+                       (str (first (first el))))))))
       ))))
+
+(defmacro display-songs (source)
+  "Template for html songs format"
+  `(loop for (ignore album name url duration) in ,source
+         do (htm (:p (:a :href url
+                         :class (str "song")
+                         (str name))
+                     (str (format nil " [~a]" duration))))))
 
 (defun s-artist-songs ()
   (let ((artist (artist-from-uri)))
@@ -44,34 +40,47 @@
       (:html
        (:body
         (:h2 (str (format nil "~a songs" artist)))
-        (loop for (ignore album name url duration) in (songs artist)
-              do (htm (:a :href url
-                          (:b (str name)))
-                      (str (format nil " [~a]" duration))
-                      (:hr))
-              )
-        ;; (do ((el (songs artist) (rest el)))
-        ;;     ((null el))
-        ;;   (htm (:p (str (second el)))))
-        ))))
-  )
+        (display-songs (songs artist)))))))
 
-(defun artist-from-uri ()
-  (first (last (cl-utilities:split-sequence #\/ (request-uri*)))))
+(defun s-genres ()
+  (with-html-output-to-string (s)
+    (:html
+     (:body
+      (:h2 "Available Genres")
+      (loop for (g) in (all-genres)
+            do (htm (:p (:a :href (format nil "/genre/~a" g)
+                            (str g)))))))))
 
-(defun artist-info ()
-  (format nil "Info for ~a~%" (artist-from-uri)))
+(defun s-genre-songs ()
+  (let ((genre (genre-from-uri)))
+    (with-html-output-to-string (s)
+      (:html
+       (:body
+        (:h2 (str (format nil "~a songs" genre)))
+        (display-songs (all-genre-songs genre)))))))
+
+(defun s-artist-similar ()
+  (let ((artist (artist-from-uri)))
+    (with-html-output-to-string (s)
+      (:html
+       (:body
+        (:h2 (str (format nil "~a similar artists" artist)))
+        (loop for (a) in (similar artist)
+              do (htm (:p
+                       (:a :href (format nil "/artist/~a" (substitute #\+ #\Space a))
+                           (str a))))))))))
 
 (setq *dispatch-table*
       (nconc (list
-              (create-regex-dispatcher "^/artist/[a-zA-Z0-9 ]+$" 'artist-info)
-              (create-regex-dispatcher "^/songs/[a-zA-Z0-9 ]+$" 's-artist-songs)
-              )
+              (create-regex-dispatcher "^/artist/[a-zA-Z0-9 ]+$" 's-artist-songs)
+              (create-regex-dispatcher "^/genre/[a-zA-Z0-9 ]+$" 's-genre-songs)
+              (create-regex-dispatcher "^/similar/[a-zA-Z0-9 ]+$" 's-artist-similar))
              (mapcar (lambda (args)
                        (apply 'create-prefix-dispatcher args))
                      '(("/test.html" parameter-test)
-                       ("/artists" s-artists)))))
+                       ("/artists" s-artists)
+                       ("/genres" s-genres)))))
 
 
-(hunchentoot:start (make-instance 'hunchentoot:easy-acceptor :port 4123))
-(asdf:oos 'asdf:load-op :hunchentoot-test)
+;; (hunchentoot:start (make-instance 'hunchentoot:easy-acceptor :port 4123))
+;; (asdf:oos 'asdf:load-op :hunchentoot-test)
