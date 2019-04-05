@@ -46,10 +46,20 @@
   (retrieve "genre" "artist_genres"
             (format nil "artist=\"~a\"" artist)))
 
+(defun all-genres ()
+  (retrieve "*" "genre" 1))
+
+(defun all-genre-songs (genre)
+  (let ((artists (retrieve "artist" "artist_genres"
+                           (format nil "genre=\"~a\"" genre))))
+    (apply #'append
+           (mapcar (lambda (a)
+                     (songs (first a)))
+                   artists))))
+
 (defun similar (artist)
   (retrieve "similar" "artist_similar"
             (format nil "artist=\"~a\"" artist)))
-
 
 ;; Insert into db
 (defun execute (template &rest values)
@@ -124,24 +134,22 @@
   (execute "DELETE FROM sqlite_sequence where name=\"song\""))
 
 (defmacro with-test-db (&body body)
+  "Use a clean and identical test database for all further
+requests. Useful for testing and playing around."
   `(let ((persistence::*db*
            (connect (merge-pathnames "tests/music_test.db"
                                      (asdf:system-relative-pathname :muse "")))) )
      ,@body
      (clean-db)))
 
-(defun test-example ()
-  (with-test-db
-    (with-local-htmls
-      (insert-artist (new-artist "Pendragon"))
-      (insert-artist (new-artist "Lost in Kiev"))
-      (print (length (execute-to-list *db* "SELECT * from artist_similar")))
-      (clean-db))))
+(defparameter *pendragon*
+  (with-local-htmls
+    (new-artist "Pendragon")))
+(similar "Pendragon")
+(defparameter *lost+in+kiev*
+  (with-local-htmls
+    (new-artist "Lost in Kiev")))
 
-;; (defparameter *pendragon*
-;;   (with-local-htmls
-;;     (new-artist "Pendragon")))
-
-;; (defparameter *lost+in+kiev*
-;;   (with-local-htmls
-;;     (new-artist "Lost in Kiev")))
+;; (insert-artist *pendragon*)
+;; (insert-artist *lost+in+kiev*)
+;; (clean-db)

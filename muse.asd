@@ -16,12 +16,14 @@
                :sqlite
                :unix-opts)
   :serial t
-  :components ((:file "package")
-               (:file "objects")
-               (:file "parser")               
-               (:file "persistence")
-               (:file "player")
-               (:file "server"))
+  :components ((:module "src"
+                :serial t
+                :components ((:file "package")
+                             (:file "objects")
+                             (:file "parser")               
+                             (:file "persistence")
+                             (:file "player")
+                             (:file "server"))))
   :in-order-to ((test-op (test-op "muse/tests"))))
 
 (defsystem :muse/tests

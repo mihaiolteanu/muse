@@ -62,6 +62,7 @@
           (remove-if #'null tracks))))
 
 (defun biography (artist)
+  (declare (string artist))
   (let* ((artist (substitute #\+ #\Space artist))
          (main-node (parse-html *artist-page* artist)) ;artist main page
          (similar-node (parse-html *artist-similar* artist))) ;similar artist page
@@ -74,6 +75,8 @@
                       (album-info artist (text node)))))))))
 
 (defmacro with-local-htmls (&body body)
+  "Use local, pre-saved and original last.fm html pages to make requests.
+Useful for testing the parser or playing around."
   `(let ((parser::*artist-page* parser::*test-artist-page*)
          (parser::*album-page* parser::*test-album-page*)
          (parser::*artist-similar* parser::*test-artist-similar*))
