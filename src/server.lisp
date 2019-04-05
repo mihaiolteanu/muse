@@ -26,13 +26,12 @@
                        (str (first (first el))))))))
       ))))
 
-(defmacro display-songs (source)
-  "Template for html songs format"
-  `(loop for (ignore album name url duration) in ,source
-         do (htm (:p (:a :href url
-                         :class (str "song")
-                         (str name))
-                     (str (format nil " [~a]" duration))))))
+(defmacro display-songs (lst)
+  `(loop for song in ,lst
+         do (htm (:p (:a :href (song-url song)
+                           :class (str "song")
+                           (str (song-name song)))
+                     (str (format nil " [~a]" (song-duration song)))))))
 
 (defun s-artist-songs ()
   (let ((artist (artist-from-uri)))
