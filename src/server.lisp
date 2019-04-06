@@ -14,17 +14,19 @@
 (defun genre-from-uri ()
   (first (last (cl-utilities:split-sequence #\/ (request-uri*)))))
 
+(defmacro standard-page (&body body)
+  `(with-html-output-to-string (s)
+     (:html
+      (:body
+       ,@body))))
+
 (defun s-artists ()
-  (with-html-output-to-string (s)
-    (:html
-     (:body
+  (standard-page
       (:h2 "Available Artists")
-      (do ((el (artists) (rest el)))
-          ((null el))
-        (let ((artist (first (first el))))
-          (htm (:p (:a :href (format nil "/artist/~a" (substitute #\+ #\Space artist))
-                       (str (first (first el))))))))
-      ))))
+    (dolist (artist (artists))
+      (let ((name (first artist)))
+        (htm (:p (:a :href (format nil "/artist/~a" (substitute #\+ #\Space name))
+                     (str name))))))))
 
 (defmacro display-songs (lst)
   `(loop for song in ,lst
@@ -35,39 +37,48 @@
 
 (defun s-artist-songs ()
   (let ((artist (artist-from-uri)))
-    (with-html-output-to-string (s)
-      (:html
-       (:body
+    (standard-page
         (:h2 (str (format nil "~a songs" artist)))
-        (display-songs (songs artist)))))))
+      (display-songs (songs artist)))))
+
+(defun play-artist-songs ()
+  (let ((artist (artist-from-uri)))
+    (play-songs (list (first (songs artist))
+                      (second (songs artist))))
+    (standard-page
+        (:h2 (str (format nil "Playing ~a songs" artist)))
+      (display-songs (songs artist)))))
 
 (defun s-genres ()
-  (with-html-output-to-string (s)
-    (:html
-     (:body
+  (standard-page
       (:h2 "Available Genres")
-      (loop for (g) in (all-genres)
-            do (htm (:p (:a :href (format nil "/genre/~a" g)
-                            (str g)))))))))
+    (loop for (g) in (all-genres)
+          do (htm (:p (:a :href (format nil "/genre/~a" g)
+                          (str g)))))))
 
 (defun s-genre-songs ()
   (let ((genre (genre-from-uri)))
-    (with-html-output-to-string (s)
-      (:html
-       (:body
+    (standard-page
         (:h2 (str (format nil "~a songs" genre)))
-        (display-songs (all-genre-songs genre)))))))
+      (display-songs (all-genre-songs genre)))))
+
+(defun play-genre-songs ()
+  (let ((genre (genre-from-uri)))
+    (standard-page
+        (:h2 (str (format nil "Playing ~a songs" genre)))
+      (display-songs (all-genre-songs genre)))))
+
+(defun s-play-pause ()
+  (play-pause))
 
 (defun s-artist-similar ()
   (let ((artist (artist-from-uri)))
-    (with-html-output-to-string (s)
-      (:html
-       (:body
+    (standard-page
         (:h2 (str (format nil "~a similar artists" artist)))
-        (loop for (a) in (similar artist)
-              do (htm (:p
-                       (:a :href (format nil "/artist/~a" (substitute #\+ #\Space a))
-                           (str a))))))))))
+      (loop for (a) in (similar artist)
+            do (htm (:p
+                     (:a :href (format nil "/artist/~a" (substitute #\+ #\Space a))
+                         (str a))))))))
 
 (setq *dispatch-table*
       (nconc (list
