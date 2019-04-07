@@ -55,14 +55,6 @@
         (:h2 (str (format nil "~a songs" artist)))
       (display-songs (songs artist)))))
 
-(defun play-artist-songs ()
-  (let ((artist (artist-from-uri)))
-    (play-songs (list (first (songs artist))
-                      (second (songs artist))))
-    (standard-page
-        (:h2 (str (format nil "Playing ~a songs" artist)))
-      (display-songs (songs artist)))))
-
 (defun s-genres ()
   (standard-page
       (:h2 "Available Genres")
@@ -76,20 +68,33 @@
         (:h2 (str (format nil "~a songs" genre)))
       (display-songs (all-genre-songs genre)))))
 
-(defun play-genre-songs ()
-  (let ((genre (genre-from-uri)))
-    (standard-page
-        (:h2 (str (format nil "Playing ~a songs" genre)))
-      (display-songs (all-genre-songs genre)))))
-
 (defun redirect-to-source ()
   (redirect (url-name (get-parameter "source-uri"))))
 
 (defun s-play-pause ()
-  (play-pause)
+  (if (playing?)
+      (progn
+        (if (string= *play-pause-button* "/img/play.png")
+            (setf *play-pause-button* "/img/pause.png")
+            (setf *play-pause-button* "/img/play.png"))
+        (play-pause))
+      (let ((what-to-play (uiop:split-string
+                           (get-parameter "source-uri")
+                           :separator "/")))
+        (cond ((string= (second what-to-play) "artist")
+               (play-songs (list (first (songs (third what-to-play)))
+                                 (second (songs (third what-to-play))))))
+
+              ((string= (second what-to-play) "genre")
+               (format t "Playing the ~a genre~%" (third what-to-play)))
+
+              ((string= (second what-to-play) "similar")
+               (format t "Playing similar artists to ~a~%" (third what-to-play))))
+        (setf *play-pause-button* "/img/pause.png")))
   (redirect-to-source))
 
 (defun s-stop ()
+  (setf *play-pause-button* "/img/play.png")
   (kill-player)
   (redirect-to-source))
 
@@ -109,10 +114,10 @@
    :defaults #.(or *compile-file-truename* *load-truename*)))
 
 (setq *dispatch-table*
-      (nconc (list
+      (nconc (list              
               (create-regex-dispatcher "^/artist/[a-zA-Z0-9 ]+$" 's-artist-songs)
               (create-regex-dispatcher "^/genre/[a-zA-Z0-9 ]+$" 's-genre-songs)
-              (create-regex-dispatcher "^/similar/[a-zA-Z0-9 ]+$" 's-artist-similar))
+              (create-regex-dispatcher "^/similar/[a-zA-Z0-9 ]+$" 's-artist-similar)
               (create-folder-dispatcher-and-handler
                "/img/"
                (merge-pathnames (make-pathname :directory '(:relative "img"))
