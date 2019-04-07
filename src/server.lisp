@@ -1,6 +1,11 @@
 (in-package :server)
 
-(defparameter *my-acceptor* (make-instance 'easy-acceptor :port 4007))
+(defparameter *my-acceptor*
+  (make-instance
+   'easy-acceptor :port 4007
+                  :document-root
+                  (namestring (merge-pathnames
+                               "src/" (asdf:system-relative-pathname :muse "")))))
 (start *my-acceptor*)
 
 (defmacro with-html (&body body)
@@ -21,14 +26,18 @@
                          (str (song-name song)))
                      (str (format nil " [~a]" (song-duration song)))))))
 
+(defparameter *play-pause-button* "/img/play.png")
+
 (defmacro standard-page (&body body)
   `(with-html-output-to-string (s)
      (:html
       (:body
-       (:a :href (conc "/stop?source-uri=" (request-uri*)) "stop")
-       (:text " | ")
-       (:a :href (conc "/play-pause?source-uri=" (request-uri*)) "play/pause")
-       (:text " | ")
+       (:a :href (conc "/stop?source-uri=" (request-uri*))
+           (:img :src "/img/stop.png"))
+       (:text "      ")
+       (:a :href (conc "/play-pause?source-uri=" (request-uri*))
+           (:img :src *play-pause-button*))
+       (:text "      ")
        (:a :href "/artists" "artists")
        ,@body))))
 
@@ -93,11 +102,21 @@
                      (:a :href (format nil "/artist/~a" (url-name a))
                          (str a))))))))
 
+(defparameter *base-directory*
+  (make-pathname
+   :name nil
+   :type nil
+   :defaults #.(or *compile-file-truename* *load-truename*)))
+
 (setq *dispatch-table*
       (nconc (list
               (create-regex-dispatcher "^/artist/[a-zA-Z0-9 ]+$" 's-artist-songs)
               (create-regex-dispatcher "^/genre/[a-zA-Z0-9 ]+$" 's-genre-songs)
               (create-regex-dispatcher "^/similar/[a-zA-Z0-9 ]+$" 's-artist-similar))
+              (create-folder-dispatcher-and-handler
+               "/img/"
+               (merge-pathnames (make-pathname :directory '(:relative "img"))
+                                *base-directory*)))
              (mapcar (lambda (args)
                        (apply 'create-prefix-dispatcher args))
                      '(("/test.html" parameter-test)
