@@ -25,6 +25,11 @@
   `(with-html-output-to-string (s)
      (:html
       (:body
+       (:a :href (conc "/stop?source-uri=" (request-uri*)) "stop")
+       (:text " | ")
+       (:a :href (conc "/play-pause?source-uri=" (request-uri*)) "play/pause")
+       (:text " | ")
+       (:a :href "/artists" "artists")
        ,@body))))
 
 (defun s-artists ()
@@ -68,8 +73,16 @@
         (:h2 (str (format nil "Playing ~a songs" genre)))
       (display-songs (all-genre-songs genre)))))
 
+(defun redirect-to-source ()
+  (redirect (url-name (get-parameter "source-uri"))))
+
 (defun s-play-pause ()
-  (play-pause))
+  (play-pause)
+  (redirect-to-source))
+
+(defun s-stop ()
+  (kill-player)
+  (redirect-to-source))
 
 (defun s-artist-similar ()
   (let ((artist (artist-from-uri)))
@@ -88,6 +101,8 @@
              (mapcar (lambda (args)
                        (apply 'create-prefix-dispatcher args))
                      '(("/test.html" parameter-test)
+                       ("/stop" s-stop)
+                       ("/play-pause" s-play-pause)
                        ("/artists" s-artists)
                        ("/genres" s-genres)))))
 

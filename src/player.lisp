@@ -20,6 +20,10 @@
 (defun quit ()
   (mpv-command '("quit" 0)))
 
+(defun kill-player()
+  ;; Prevent reopening the player with a new song from list
+  (destroy-thread *playing-thread*)
+  (quit))
 
 ;; (quit)
 ;; (play-pause)
