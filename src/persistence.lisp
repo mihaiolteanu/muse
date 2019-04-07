@@ -34,7 +34,7 @@
 (defun songs (artist)
   (let ((raw-songs
           (retrieve "*" "all_songs"
-                    (format nil "artist=\"~a\"" (substitute #\Space #\+ artist)))))
+                    (format nil "artist=\"~a\"" (clean-name artist)))))
     (mapcar (lambda (song)
               (make-instance 'song
                 :name     (third song)

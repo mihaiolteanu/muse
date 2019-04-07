@@ -8,8 +8,8 @@
      ,@body))
 
 (defun artist-from-uri ()
-  (substitute #\Space #\+
-              (first (last (cl-utilities:split-sequence #\/ (request-uri*))))))
+  (clean-name
+   (first (last (cl-utilities:split-sequence #\/ (request-uri*))))))
 
 (defun genre-from-uri ()
   (first (last (cl-utilities:split-sequence #\/ (request-uri*)))))
@@ -25,7 +25,7 @@
       (:h2 "Available Artists")
     (dolist (artist (artists))
       (let ((name (first artist)))
-        (htm (:p (:a :href (format nil "/artist/~a" (substitute #\+ #\Space name))
+        (htm (:p (:a :href (format nil "/artist/~a" (url-name name))
                      (str name))))))))
 
 (defmacro display-songs (lst)
@@ -77,7 +77,7 @@
         (:h2 (str (format nil "~a similar artists" artist)))
       (loop for (a) in (similar artist)
             do (htm (:p
-                     (:a :href (format nil "/artist/~a" (substitute #\+ #\Space a))
+                     (:a :href (format nil "/artist/~a" (url-name a))
                          (str a))))))))
 
 (setq *dispatch-table*

@@ -21,6 +21,14 @@
 
 (defvar *lastfm-user-loved-url* "https://www.last.fm/user/~A/loved")
 
+(defun url-name (str)
+  "Replace any spaces with pluses; string will be used in url address and requests"
+  (substitute #\+ #\Space str))
+
+(defun clean-name (str)
+  "Replace any pluses with spaces; string will be used in html page content."
+  (substitute #\Space #\+ str))
+
 (defun parse-html (template &rest components)
   "Given an url template and some url components,
  build the actual url and return a parsed object."
@@ -35,7 +43,7 @@
  with info for such an artist and album"
   (format nil *album-page*
           (format nil "~A/~A" artist
-                  (substitute #\+ #\Space album))))
+                  (url-name album))))
 
 (defun trim-whitespace (str)
   (string-trim '(#\Space #\Tab #\Newline) str))
@@ -63,7 +71,7 @@
 
 (defun biography (artist)
   (declare (string artist))
-  (let* ((artist (substitute #\+ #\Space artist))
+  (let* ((artist (url-name artist))
          (main-node (parse-html *artist-page* artist)) ;artist main page
          (similar-node (parse-html *artist-similar* artist))) ;similar artist page
     (list
@@ -103,7 +111,7 @@ Useful for testing the parser or playing around."
   (let ((bio (biography artist)))
     (make-instance
      'artist
-     :name (substitute #\Space #\+ artist)
+     :name (clean-name artist)
      :genres (map 'list (lambda (g)
                           (make-instance 'genre :name g))
                   (second bio))

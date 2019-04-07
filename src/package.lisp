@@ -13,7 +13,8 @@
   (:import-from :cl-utilities :split-sequence)
   (:shadowing-import-from :dexador :get)
   (:shadowing-import-from :dexador :delete)
-  (:export new-artist with-local-htmls))
+  (:export new-artist with-local-htmls
+           url-name clean-name))
 
 (defpackage :persistence
   (:use :cl :sqlite :objects :parser)
@@ -27,4 +28,4 @@
   (:export play play-pause seek quit))
 
 (defpackage :server
-  (:use :cl :persistence :cl-who :hunchentoot))
+  (:use :cl :persistence :parser :objects :player :cl-who :hunchentoot))
