@@ -14,6 +14,13 @@
 (defun genre-from-uri ()
   (first (last (cl-utilities:split-sequence #\/ (request-uri*)))))
 
+(defmacro display-songs (lst)
+  `(loop for song in ,lst
+         do (htm (:p (:a :href (song-url song)
+                         :class (str "song")
+                         (str (song-name song)))
+                     (str (format nil " [~a]" (song-duration song)))))))
+
 (defmacro standard-page (&body body)
   `(with-html-output-to-string (s)
      (:html
@@ -27,13 +34,6 @@
       (let ((name (first artist)))
         (htm (:p (:a :href (format nil "/artist/~a" (url-name name))
                      (str name))))))))
-
-(defmacro display-songs (lst)
-  `(loop for song in ,lst
-         do (htm (:p (:a :href (song-url song)
-                           :class (str "song")
-                           (str (song-name song)))
-                     (str (format nil " [~a]" (song-duration song)))))))
 
 (defun s-artist-songs ()
   (let ((artist (artist-from-uri)))
