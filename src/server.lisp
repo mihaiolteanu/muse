@@ -26,18 +26,26 @@
                          (str (song-name song)))
                      (str (format nil " [~a]" (song-duration song)))))))
 
-(defparameter *play-pause-button* "/img/play.png")
+(defparameter *pause-button* "⏸")
+(defparameter *play-button* "▶")
+(defparameter *play-pause-button* *play-button*)
 
 (defmacro standard-page (&body body)
   `(with-html-output-to-string (s)
      (:html
       (:body
-       (:a :href (conc "/stop?source-uri=" (request-uri*))
-           (:img :src "/img/stop.png"))
-       (:text "      ")
-       (:a :href (conc "/play-pause?source-uri=" (request-uri*))
-           (:img :src *play-pause-button*))
-       (:text "      ")
+       (:a :style "text-decoration:none"
+           :href (conc "/stop?source-uri=" (request-uri*)) "⏹")
+       (:text " ")
+       (:a :style "text-decoration:none"
+           :href (conc "/previous?source-uri=" (request-uri*)) "⏪")
+       (:text " ")
+       (:a :style "text-decoration:none"
+           :href (conc "/play-pause?source-uri=" (request-uri*)) (str *play-pause-button*))
+       (:text " ")
+       (:a :style "text-decoration:none"
+           :href (conc "/next?source-uri=" (request-uri*)) "⏩")
+       (:br)
        (:a :href "/artists" "artists")
        ,@body))))
 
@@ -72,11 +80,17 @@
   (redirect (url-name (get-parameter "source-uri"))))
 
 (defun s-play-pause ()
+  "If the player is already started, toggle the play/pause status of
+the player and change the button status.  Otherwise, figure out what
+page we were on when the button was pressed and play the contents for
+that page based on the url. For example, if we were on an artist page
+when the button was pressed, play that artist songs, if on similar
+artists page, play similar artists, and so on."
   (if (playing?)
       (progn
-        (if (string= *play-pause-button* "/img/play.png")
-            (setf *play-pause-button* "/img/pause.png")
-            (setf *play-pause-button* "/img/play.png"))
+        (if (string= *play-pause-button* *play-button*)
+            (setf *play-pause-button* *pause-button*)
+            (setf *play-pause-button* *play-button*))
         (play-pause))
       (let ((what-to-play (uiop:split-string
                            (get-parameter "source-uri")
@@ -90,13 +104,15 @@
 
               ((string= (second what-to-play) "similar")
                (format t "Playing similar artists to ~a~%" (third what-to-play))))
-        (setf *play-pause-button* "/img/pause.png")))
+        (setf *play-pause-button* *pause-button*)))
   (redirect-to-source))
 
 (defun s-stop ()
-  (setf *play-pause-button* "/img/play.png")
-  (kill-player)
-  (redirect-to-source))
+  (when (playing?)
+    (setf *play-pause-button* *play-button*)
+    (kill-player))
+  (redirect-to-source)
+)
 
 (defun s-artist-similar ()
   (let ((artist (artist-from-uri)))
@@ -126,7 +142,9 @@
                        (apply 'create-prefix-dispatcher args))
                      '(("/test.html" parameter-test)
                        ("/stop" s-stop)
+                       ("/previous" s-previous)
                        ("/play-pause" s-play-pause)
+                       ("/next" s-next)
                        ("/artists" s-artists)
                        ("/genres" s-genres)))))
 
