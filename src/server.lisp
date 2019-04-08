@@ -96,8 +96,7 @@ artists page, play similar artists, and so on."
                            (get-parameter "source-uri")
                            :separator "/")))
         (cond ((string= (second what-to-play) "artist")
-               (play-songs (list (first (songs (third what-to-play)))
-                                 (second (songs (third what-to-play))))))
+               (play-songs (songs (third what-to-play))))
 
               ((string= (second what-to-play) "genre")
                (format t "Playing the ~a genre~%" (third what-to-play)))
