@@ -7,6 +7,7 @@
   :version "0.0.1"
   :depends-on (:hunchentoot
                :cl-who
+               :bt-semaphore
                :dexador
                :plump
                :lquery

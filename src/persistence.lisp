@@ -152,7 +152,7 @@ requests. Useful for testing and playing around."
 (defparameter *pendragon*
   (with-local-htmls
     (new-artist "Pendragon")))
-(similar "Pendragon")
+
 (defparameter *lost+in+kiev*
   (with-local-htmls
     (new-artist "Lost in Kiev")))

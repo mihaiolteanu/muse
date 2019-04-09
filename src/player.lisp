@@ -1,6 +1,8 @@
 (in-package :player)
 
 (defvar *mpvsocket* "/tmp/muse_mpv_socket")
+(defparameter *playing-thread* '())
+(defparameter *playing-song* '())
 
 (defun play-songs (lst)
   (print lst)
@@ -62,17 +64,7 @@
   (mpv-command '("quit" 0)))
 
 (defun kill-player()
-  ;; Prevent reopening the player with a new song from list
-  (destroy-thread *playing-thread*)
-  (quit))
-
-;; (quit)
-;; (play-pause)
-;; (seek 20)
-;; (play (third (first (songs "Anathema"))))
-
-
-
-;; (ql:quickload :muse)
-
-
+  "Prevents reopening the player with a new song from list"
+  (when (playing?)
+    (destroy-thread *playing-thread*)
+    (quit)))

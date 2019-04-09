@@ -60,10 +60,11 @@
 
 (defun s-artists ()
   (standard-page
-      (:h2 "Available Artists")
+    (:h2 "Available Artists")
     (dolist (artist (artists))
       (let ((name (first artist)))
-        (htm (:p (:a :href (format nil "/artist/~a" (url-name name))
+        (htm (:p (:a :class "artist"
+                     :href (format nil "/artist/~a" (url-name name))
                      (str name))))))))
 
 (defun s-artist-songs ()
@@ -172,7 +173,6 @@ artists page, play similar artists, and so on."
                        ("/next" s-next)
                        ("/artists" s-artists)
                        ("/genres" s-genres)))))
-
 
 ;; (hunchentoot:start (make-instance 'hunchentoot:easy-acceptor :port 4123))
 ;; (asdf:oos 'asdf:load-op :hunchentoot-test)
