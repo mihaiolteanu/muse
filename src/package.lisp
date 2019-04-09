@@ -24,8 +24,10 @@
            with-test-db))
 
 (defpackage :player
-  (:use :cl :uiop)
-  (:export play play-pause seek quit))
+  (:use :cl :objects :uiop :bt)
+  (:export play-song play-songs continue-with-video
+           playing? next-song previous-song
+           play-pause kill-player seek quit))
 
 (defpackage :server
   (:use :cl :persistence :parser :objects :player :cl-who :hunchentoot))

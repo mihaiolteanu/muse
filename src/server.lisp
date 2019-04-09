@@ -49,6 +49,15 @@
        (:a :href "/artists" "artists")
        ,@body))))
 
+(defun server-status ()
+  (standard-page
+    (:h2 "Server Status")
+    (:h3 "Player Status")
+    (:p :class "player-status"
+        (if (playing?)
+            (str "playing")
+            (str "stopped")))))
+
 (defun s-artists ()
   (standard-page
       (:h2 "Available Artists")
@@ -77,7 +86,10 @@
       (display-songs (all-genre-songs genre)))))
 
 (defun redirect-to-source ()
-  (redirect (url-name (get-parameter "source-uri"))))
+  "Only redirect back to calling source, when such a source was given"
+  (let ((source-uri (get-parameter "source-uri")))
+    (when source-uri
+      (redirect (url-name source-uri)))))
 
 (defun s-play-pause ()
   "If the player is already started, toggle the play/pause status of
@@ -106,12 +118,25 @@ artists page, play similar artists, and so on."
         (setf *play-pause-button* *pause-button*)))
   (redirect-to-source))
 
+(defun s-previous ()
+  (when (playing?)
+    (previous-song))
+  (redirect-to-source))
+
+(defun s-next ()
+  (when (playing?)
+    (next-song))
+  (redirect-to-source))
+
 (defun s-stop ()
   (when (playing?)
     (setf *play-pause-button* *play-button*)
     (kill-player))
-  (redirect-to-source)
-)
+  (redirect-to-source))
+
+(defun s-continue-with-video ()
+  (when (playing?)
+    (continue-with-video)))
 
 (defun s-artist-similar ()
   (let ((artist (artist-from-uri)))
@@ -139,7 +164,8 @@ artists page, play similar artists, and so on."
                                 *base-directory*)))
              (mapcar (lambda (args)
                        (apply 'create-prefix-dispatcher args))
-                     '(("/test.html" parameter-test)
+                     '(("/status" server-status)
+                       ("/video" s-continue-with-video)
                        ("/stop" s-stop)
                        ("/previous" s-previous)
                        ("/play-pause" s-play-pause)
