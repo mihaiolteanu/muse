@@ -32,15 +32,23 @@
   (retrieve "*" "artist" "available=1"))
 
 (defun songs (artist)
-  (let ((raw-songs
-          (retrieve "*" "all_songs"
-                    (format nil "artist=\"~a\"" (clean-name artist)))))
-    (mapcar (lambda (song)
-              (make-instance 'song
-                :name     (third song)
-                :duration (fifth song)
-                :url      (fourth song)))
-            raw-songs)))
+  "Retrieve all songs for the given artist from the db. If artist is not in the db,
+download the artist from the web and save it in the db."
+  (let ((artist (clean-name artist)))
+    (if (artist-available artist)
+        (let ((raw-songs
+                (retrieve "*" "all_songs"
+                          (format nil "artist=\"~a\"" artist))))
+          (mapcar (lambda (song)
+                    (make-instance 'song
+                     :name     (third song)
+                     :duration (fifth song)
+                     :url      (fourth song)))
+                  raw-songs))
+        (progn
+          (insert-artist (new-artist artist))
+          ;; Retry now, after retrieving and saving to db.
+          (songs artist)))))
 
 (defun all-songs ()
   (retrieve "*" "all_songs" 1))
