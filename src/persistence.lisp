@@ -150,12 +150,16 @@ download the artist from the web and save it in the db."
 
 (defmacro with-test-db (&body body)
   "Use a clean and identical test database for all further
-requests. Useful for testing and playing around."
-  `(let ((persistence::*db*
-           (connect (merge-pathnames "tests/music_test.db"
-                                     (asdf:system-relative-pathname :muse "")))) )
+requests. Let binding might be local only in the calling thread so
+a setf is needed to temporarily use a test db."
+  `(let ((original-db *db*))
+     (setf *db* (connect
+                 (merge-pathnames "tests/music_test.db"
+                                  (asdf:system-relative-pathname :muse ""))))
      ,@body
-     (clean-db)))
+     (clean-db)
+     (setf *db* original-db)))
+
 
 (defparameter *pendragon*
   (with-local-htmls
