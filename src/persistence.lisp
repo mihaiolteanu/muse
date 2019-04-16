@@ -3,24 +3,17 @@
 (defparameter *db*
   (connect (merge-pathnames "music.db" (asdf:system-relative-pathname :muse ""))))
 
-(defun prepare-in-string (lst)
-  "Transform '((1) (2) (3)) into '(1, 2, 3)"
-  (format nil "(~{~{~A~}~^, ~})" lst))
-
 (defun last-insert-rowid ()
   (execute-single *db* "SELECT last_insert_rowid()"))
 
-(defun artist-available (artist)
+(defun available-p (artist)
   (let ((available
           (execute-single *db*
-            (format nil
-                    "SELECT available FROM artist WHERE EXISTS (
-                     SELECT name FROM artist
-                     where name=\"~a\")"
-                    artist))))
+           (format nil
+                   "SELECT available FROM artist WHERE name=\"~a\""
+                   artist))))
     (when available
       (= available 1))))
-
 
 ;; Extract from db
 (defun retrieve (what from-where condition)
@@ -35,7 +28,7 @@
   "Retrieve all songs for the given artist from the db. If artist is not in the db,
 download the artist from the web and save it in the db."
   (let ((artist (clean-name artist)))
-    (if (artist-available artist)
+    (if (available-p artist)
         (let ((raw-songs
                 (retrieve "*" "all_songs"
                           (format nil "artist=\"~a\"" artist))))
@@ -159,16 +152,3 @@ a setf is needed to temporarily use a test db."
      ,@body
      (clean-db)
      (setf *db* original-db)))
-
-
-(defparameter *pendragon*
-  (with-local-htmls
-    (new-artist "Pendragon")))
-
-(defparameter *lost+in+kiev*
-  (with-local-htmls
-    (new-artist "Lost in Kiev")))
-
-;; (insert-artist *pendragon*)
-;; (insert-artist *lost+in+kiev*)
-;; (clean-db)
