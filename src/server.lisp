@@ -31,6 +31,13 @@
                                       (song-name song))))
                      (str (format nil "[~a]" (song-duration song)))))))
 
+(defmacro display-artists (artists)
+  `(dolist (artist ,artists)
+     (let ((name (artist-name artist)))
+       (htm (:p (:a :class "artist"
+                    :href (format nil "/artist/~a" (url-name name))
+                    (str name)))))))
+
 (defparameter *pause-button* "⏸")
 (defparameter *play-button* "▶")
 (defparameter *play-pause-button* *play-button*)
@@ -69,11 +76,7 @@
 (defun s-artists ()
   (standard-page
     (:h2 "Available Artists")
-    (dolist (artist (artists))
-      (let ((name (artist-name artist)))
-        (htm (:p (:a :class "artist"
-                     :href (format nil "/artist/~a" (url-name name))
-                     (str name))))))))
+    (display-artists (artists))))
 
 (defun s-tags ()
   (standard-page
@@ -85,20 +88,17 @@
                      (str name))))))))
 
 (defun s-tag-artists ()
-  (let* ((tag (tag-from-uri))
-         (artists (genre-artists tag)))
+  (let ((tag (tag-from-uri)))
     (standard-page
       (:h2 (str (format nil "Artists with the ~a tag" tag)))
-      (dolist (artist artists)
-        (let ((name (artist-name artist)))
-          (htm (:p (:a :class "artist"
-                       :href (format nil "/artist/~a" name)
-                       (str name)))))))))
+      (display-artists (genre-artists tag)))))
 
-(defun s-artist-songs ()
+(defun s-artist-info ()
   (let ((artist (artist-from-uri)))
     (standard-page
-        (:h2 (str (format nil "~a songs" artist)))
+      (:h2 (str (format nil "~a tags" artist)))
+      
+      (:h2 (str (format nil "~a songs" artist)))
       (display-songs (songs artist)))))
 
 (defun s-genres ()
