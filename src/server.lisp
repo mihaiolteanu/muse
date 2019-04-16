@@ -19,24 +19,34 @@
   (clean-name
    (first (last (cl-utilities:split-sequence #\/ (request-uri*))))))
 
-(defun genre-from-uri ()
+(defun tag-from-uri ()
   (first (last (cl-utilities:split-sequence #\/ (request-uri*)))))
 
 (defmacro display-songs (lst)
   `(loop for song in ,lst
-         do (htm (:p (:a :href (song-url song)
+         do (htm (:a :href (song-url song)
                          :class (str "song")
                          (str (format nil  "~a - ~a "
                                       (song-artist-name song)
                                       (song-name song))))
-                     (str (format nil "[~a]" (song-duration song)))))))
+                 (str (format nil "[~a]" (song-duration song)))
+                 (:br))))
 
 (defmacro display-artists (artists)
   `(dolist (artist ,artists)
      (let ((name (artist-name artist)))
-       (htm (:p (:a :class "artist"
+       (htm (:a :class "artist"
                     :href (format nil "/artist/~a" (url-name name))
-                    (str name)))))))
+                    (str name))
+            (:br)))))
+
+(defmacro display-tags (tags)
+  `(dolist (tag ,tags)
+     (let ((name (genre-name tag)))
+       (htm (:a :class "tag"
+                    :href (format nil "/tag/~a" name)
+                    (str name))
+            (:br)))))
 
 (defparameter *pause-button* "⏸")
 (defparameter *play-button* "▶")
@@ -83,11 +93,7 @@
 (defun s-tags ()
   (standard-page
     (:h2 "Available Tags")
-    (dolist (tag (all-genres))
-      (let ((name (genre-name tag)))
-        (htm (:p (:a :class "tag"
-                     :href (format nil "/tag/~a" name)
-                     (str name))))))))
+    (display-tags (all-genres))))
 
 (defun s-tag-artists ()
   (let ((tag (tag-from-uri)))
@@ -99,7 +105,7 @@
   (let ((artist (artist-from-uri)))
     (standard-page
       (:h2 (str (format nil "~a tags" artist)))
-      
+      (display-tags (genres artist))
       (:h2 (str (format nil "~a songs" artist)))
       (display-songs (songs artist)))))
 
@@ -173,7 +179,7 @@ artists page, play similar artists, and so on."
 
 (setq *dispatch-table*
       (nconc (list              
-              (create-regex-dispatcher "^/artist/[a-zA-Z0-9 ]+$" 's-artist-songs)
+              (create-regex-dispatcher "^/artist/[a-zA-Z0-9 ]+$" 's-artist-info)
               (create-regex-dispatcher "^/tag/[a-zA-Z0-9 ]+$" 's-tag-artists)
               (create-regex-dispatcher "^/similar/[a-zA-Z0-9 ]+$" 's-artist-similar)
               (create-folder-dispatcher-and-handler
