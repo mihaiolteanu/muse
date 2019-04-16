@@ -83,7 +83,7 @@
       (is (string= (artist-name (first (artists))) "Pendragon"))
       ;; Simlar artists
       (is (equal
-           (mapcar #'first (similar "Pendragon"))
+           (mapcar #'artist-name (similar "Pendragon"))
            '("Arena" "IQ" "Satellite" "Pallas" "Marillion" "The Tangent" "Comedy of Errors"
              "Magenta" "Big Big Train" "Knight Area" "Sylvan" "Fish" "Mostly Autumn"
              "Transatlantic" "RPWL")))

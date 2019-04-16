@@ -120,8 +120,11 @@ in db, fetch from web, save to db and retry."
                    artists))))
 
 (defun similar (artist)
-  (retrieve "similar" "artist_similar"
-            (format nil "artist=\"~a\"" artist)))
+  (mapcar (lambda (a)
+              (make-instance 'artist
+                             :name (first a)))
+          (retrieve "similar" "artist_similar"
+                    (format nil "artist=\"~a\"" artist))))
 
 ;; Insert into db
 (defun execute (template &rest values)
