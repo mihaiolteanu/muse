@@ -75,6 +75,26 @@
                      :href (format nil "/artist/~a" (url-name name))
                      (str name))))))))
 
+(defun s-tags ()
+  (standard-page
+    (:h2 "Available Tags")
+    (dolist (tag (all-genres))
+      (let ((name (genre-name tag)))
+        (htm (:p (:a :class "tag"
+                     :href (format nil "/tag/~a" name)
+                     (str name))))))))
+
+(defun s-tag-artists ()
+  (let* ((tag (tag-from-uri))
+         (artists (genre-artists tag)))
+    (standard-page
+      (:h2 (str (format nil "Artists with the ~a tag" tag)))
+      (dolist (artist artists)
+        (let ((name (artist-name artist)))
+          (htm (:p (:a :class "artist"
+                       :href (format nil "/artist/~a" name)
+                       (str name)))))))))
+
 (defun s-artist-songs ()
   (let ((artist (artist-from-uri)))
     (standard-page
@@ -165,7 +185,7 @@ artists page, play similar artists, and so on."
 (setq *dispatch-table*
       (nconc (list              
               (create-regex-dispatcher "^/artist/[a-zA-Z0-9 ]+$" 's-artist-songs)
-              (create-regex-dispatcher "^/genre/[a-zA-Z0-9 ]+$" 's-genre-songs)
+              (create-regex-dispatcher "^/tag/[a-zA-Z0-9 ]+$" 's-tag-artists)
               (create-regex-dispatcher "^/similar/[a-zA-Z0-9 ]+$" 's-artist-similar)
               (create-folder-dispatcher-and-handler
                "/img/"
@@ -180,6 +200,7 @@ artists page, play similar artists, and so on."
                        ("/play-pause" s-play-pause)
                        ("/next" s-next)
                        ("/artists" s-artists)
+                       ("/tags" s-tags)
                        ("/genres" s-genres)))))
 
 ;; (hunchentoot:start (make-instance 'hunchentoot:easy-acceptor :port 4123))
