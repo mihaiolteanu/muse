@@ -94,103 +94,30 @@
       (is (= (length (songs "Pendragon")) 53))
       ;; Correct song url, duration, etc..
       (let ((pendragon-songs (songs "Pendragon")))
-        (is (equal (mapcar #'song-name pendragon-songs)
-                   '("Indigo" "Eraserhead" "Comatose, Part I: View From the Seashore"
-                     "Comatose, Part II: Space Cadet" "Comatose, Part III: Home and Dry"
-                     "The Freak Show" "It's Only Me"
-                     "If I Were the Wind (and You Were the Rain)"
-                     "Dance of the Seven Veils - Pt. 1 Faithless"
-                     "Dance of the Seven Veils - Pt. 2 All Over Now"
-                     "Not of This World: Not of This World, Pt. 1"
-                     "Not of This World: Give It to Me, Pt. 2"
-                     "Not of This World: Green Eyed Angel, Pt. 3"
-                     "A Man of Nomadic Traits"
-                     "World's End - Pt. 1 The Lost Children"
-                     "Worlds End: And Finally, Pt. 2"
-                     "Paintbox (acoustic version)"
-                     "King of the Castle (acoustic version)"
-                     "The Masquerade Overture"
-                     "As Good as Gold"
-                     "Paintbox"
-                     "The Pursuit of Excellence"
-                     "Guardian Of My Soul"
-                     "The Shadow"
-                     "Masters Of Illusion"
-                     "Bird of Paradise"
-                     "Midnight Running"
-                     "A Million Miles Away"
-                     "Believe"
-                     "No Place for the Innocent"
-                     "Wisdom Of Solomon"
-                     "The Wishing Well, Pt.1 - For Your Journey"
-                     "The Wishing Well: II. Sou' By Sou' West"
-                     "The Wishing Well, Pt.3 - We Talked"
-                     "The Wishing Well, Pt.4 - Two Roads"
-                     "Learning Curve" "The Edge of the World"
-                     "Passion"
-                     "Empathy"
-                     "Feeding Frenzy"
-                     "This Green And Pleasant Land"
-                     "It's Just A Matter Of Not Getting Caught"
-                     "Skara Brae"
-                     "Your Black Heart"
-                     "The Walls of Babylon"
-                     "Ghosts"
-                     "Breaking the Spell"
-                     "The Last Man on Earth"
-                     "Nostradamus (Stargazing)"
-                     "Am I Really Losing You?"
-                     "Third World In The UK"
-                     "Dune" "Fallen Dreams and Angels")))
-        (is (equal (mapcar #'song-duration pendragon-songs)
-                   '("13:43" "9:05" "7:40" "4:02" "5:55" "4:11" "8:16" "9:23" "4:09"
-                     "7:31" "7:20"  "2:24" "6:43" "11:43" "10:46" "7:15" "4:25" "4:44"
-                     "3:02" "7:15" "8:38" "2:36" "12:41" "9:53" "3:35" "6:57" "7:46"
-                     "3:22" "2:57" "5:36" "7:07" "4:31" "6:48" "5:29" "4:19" "6:34" "8:20"
-                     "5:27" "11:21" "6:15" "13:13" "4:41" "7:31" "6:46" "10:50" "7:58"
-                     "8:30" "14:46" "6:23" "4:47" "7:15" "4:40" "5:23")))
-        (is (equal (mapcar #'song-url pendragon-songs)
-                   '("https://www.youtube.com/watch?v=ccr-VkEpE18"
-                     "https://www.youtube.com/watch?v=gHeWRLugWQA"
-                     "NIL" "NIL" "NIL"
-                     "https://www.youtube.com/watch?v=42m2llb0w84"
-                     "https://www.youtube.com/watch?v=3obNa5BE5MY"
-                     "https://www.youtube.com/watch?v=V4BUn1YYWJE"
-                     "NIL" "NIL" "NIL" "NIL"
-                     "https://www.youtube.com/watch?v=pvuBpgXNOcg"
-                     "https://www.youtube.com/watch?v=0m32f4X3ROU"
-                     "NIL" "NIL"
-                     "https://www.youtube.com/watch?v=5Qveh4b3qkA"
-                     "https://www.youtube.com/watch?v=0pb8UG4iODE"
-                     "https://www.youtube.com/watch?v=2G5hHEuG65I"
-                     "https://www.youtube.com/watch?v=qQH5Pvawkic"
-                     "https://www.youtube.com/watch?v=5Qveh4b3qkA"
-                     "https://www.youtube.com/watch?v=iChCibt5ztQ"
-                     "https://www.youtube.com/watch?v=S7MDO-GnvEY"
-                     "https://www.youtube.com/watch?v=yIW-uIbeBis"
-                     "https://www.youtube.com/watch?v=dz_C0wvb4y4"
-                     "https://www.youtube.com/watch?v=BJaVEjTLt3E"
-                     "NIL" "NIL" "NIL"
-                     "https://www.youtube.com/watch?v=AUWIfefu4wE"
-                     "NIL" "NIL" "NIL" "NIL" "NIL"
-                     "https://www.youtube.com/watch?v=DgffQKNnxc4"
-                     "NIL"
-                     "https://www.youtube.com/watch?v=nfKE3lfdoHk"
-                     "https://www.youtube.com/watch?v=O9R2dZCshK0"
-                     "https://www.youtube.com/watch?v=1xQR14OeD0M"
-                     "https://www.youtube.com/watch?v=eORvMUrLqt0"
-                     "https://www.youtube.com/watch?v=Q9ne4MFcp18"
-                     "https://www.youtube.com/watch?v=t0N6Q7huah8"
-                     "https://www.youtube.com/watch?v=7lANa-oS944"
-                     "https://www.youtube.com/watch?v=RcRw-JXzW-s"
-                     "https://www.youtube.com/watch?v=6MjeaMmcJtU"
-                     "https://www.youtube.com/watch?v=8564jSjUn1s"
-                     "NIL"
-                     "https://www.youtube.com/watch?v=4IydG57-mrw"
-                     "https://www.youtube.com/watch?v=nPHRoF-SOGk"
-                     "NIL"
-                     "https://www.youtube.com/watch?v=1sDjW-NL0uQ"
-                     "https://www.youtube.com/watch?v=_8onzQSfoME")))))))
+        (is (equal
+             (subseq (mapcar #'song-name pendragon-songs)
+                     0 10)
+             '("Indigo" "Eraserhead" "Comatose, Part I: View From the Seashore"
+               "Comatose, Part II: Space Cadet" "Comatose, Part III: Home and Dry"
+               "The Freak Show" "It's Only Me"
+               "If I Were the Wind (and You Were the Rain)"
+               "Dance of the Seven Veils - Pt. 1 Faithless"
+               "Dance of the Seven Veils - Pt. 2 All Over Now")))
+        (is (equal
+             (subseq (mapcar #'song-duration pendragon-songs)
+                     0 10)
+             '("13:43" "9:05" "7:40" "4:02" "5:55"
+               "4:11" "8:16" "9:23" "4:09" "7:31")))
+        (is (equal
+             (subseq (mapcar #'song-url pendragon-songs)
+                     0 10)
+             '("https://www.youtube.com/watch?v=ccr-VkEpE18"
+               "https://www.youtube.com/watch?v=gHeWRLugWQA"
+               "NIL" "NIL" "NIL"
+               "https://www.youtube.com/watch?v=42m2llb0w84"
+               "https://www.youtube.com/watch?v=3obNa5BE5MY"
+               "https://www.youtube.com/watch?v=V4BUn1YYWJE"
+               "NIL" "NIL")))))))
 
 (test new-artist-if-artist-not-in-db
   "If the artist is not in the database, calling songs should retrieve
