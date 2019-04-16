@@ -79,9 +79,6 @@ download the artist from the web and save it in the db."
           (retrieve "*" "artist_albums_view"
                     (format nil "artist=\"~a\"" artist))))
 
-;; (with-local-htmls
-;;   (artist-albums (new-artist "Pendragon")))
-
 (defun genres (artist)
   (retrieve "genre" "artist_genres"
             (format nil "artist=\"~a\"" artist)))
