@@ -52,6 +52,7 @@
 (test insert-artist-in-db
   (with-test-db
     (with-local-htmls
+      (is (= (length (artists)) 0))
       (insert-artist (new-artist "Pendragon"))
       ;; Artist was added
       (is (= (length (artists)) 1))
