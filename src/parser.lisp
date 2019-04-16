@@ -94,9 +94,9 @@
 (defmacro with-local-htmls (&body body)
   "Use local, pre-saved and original last.fm html pages to make requests.
 Useful for testing the parser or playing around."
-  `(let ((parser::*artist-page* parser::*test-artist-page*)
-         (parser::*album-page* parser::*test-album-page*)
-         (parser::*artist-similar* parser::*test-artist-similar*))
+  `(let ((*artist-page* *test-artist-page*)
+         (*album-page* *test-album-page*)
+         (*artist-similar* *test-artist-similar*))
      ,@body))
 
 (defun new-songs (raw artist)
