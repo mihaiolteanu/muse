@@ -50,9 +50,12 @@
  build the actual url and return a parsed object."
   (let* ((url (eval `(format nil ,template ,@components)))
          (request (if (not (null (search "http" url)))
-                      (get url)    ; Handle http requests
+                      (handler-case (get url) ; Handle http requests
+                        (http-request-not-found ()
+                          nil)) 
                       (uiop:read-file-string url)))) ;handle local html files
-    (parse request)))
+    (when request
+      (parse request))))
 
 (defun album-page (artist album)
   "Given an artist name and an album name, return a url
