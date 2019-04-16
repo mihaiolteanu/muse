@@ -45,7 +45,13 @@ download the artist from the web and save it in the db."
           (songs artist)))))
 
 (defun all-songs ()
-  (retrieve "*" "all_songs" 1))
+  "Retrieve all available songs from the db as a list of song objects"
+  (mapcar (lambda (s)
+          (make-instance 'song
+                         :name (third s)
+                         :url (fourth s)
+                         :duration (fifth s)))
+          (retrieve "*" "all_songs" 1)))
 
 (defun albums (artist)
   (retrieve "*" "artist_albums_view"
