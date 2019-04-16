@@ -58,7 +58,10 @@
     (:h3 "Player Status")
     (:p :class "player-status"
         (if (playing?)
-            (str "playing")
+            (htm
+              (:p :class "playing-song"
+                  (str "playing")
+                  (display-songs (list (what-is-playing)))))
             (str "stopped")))))
 
 (defun s-artists ()

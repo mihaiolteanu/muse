@@ -59,6 +59,9 @@ but we don't want that to happend when the command is next-song, for example "
   (when *playing-thread*
     (thread-alive-p *playing-thread*)))
 
+(defun what-is-playing ()
+  *playing-song*)
+
 (defun play-song (song)
   (declare (song song))
   (play (song-url song)))
