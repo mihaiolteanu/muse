@@ -106,7 +106,10 @@ in db, fetch from web, save to db and retry."
                                           (tag-artists genre))
                     ;; Try again
                     (genre-artists genre)))))))
-    (apply #'append artists)))
+    (mapcar (lambda (a)
+              (make-instance 'artist
+                             :name (first a)))
+            artists)))
 
 (defun all-genre-songs (genre)
   (let ((artists (retrieve "artist" "artist_genres"

@@ -136,9 +136,12 @@ fetch them first and then return the results from the db"
       (let ((artists (genre-artists "melancholic")))
         (is (= (length artists)
                63))
-        (is (equal (subseq artists 0 5)
+        (is (equal (subseq (mapcar #'artist-name
+                                   (genre-artists "melancholic"))
+                           0 5)
                    '("Antimatter" "My Dying Bride" "Blackfield"
-                     "Sopor Aeternus & The Ensemble of Shadows" "Juzhin")))))))
+                     "Sopor Aeternus & The Ensemble of Shadows" "Juzhin")))
+        ))))
 
 (defparameter *localhost* "http://127.0.0.1:~a/")
 
