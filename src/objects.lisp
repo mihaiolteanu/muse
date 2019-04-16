@@ -17,7 +17,8 @@
   ((name :initarg :name :accessor genre-name)))
 
 (defclass song ()
-  ((name     :initarg :name     :accessor song-name)
+  ((artist   :initarg :artist   :accessor song-artist-name)
+   (name     :initarg :name     :accessor song-name)
    (duration :initarg :duration :accessor song-duration)
    (url      :initarg :url      :accessor song-url    :initform nil)
    (lyrics   :initarg :lyrics   :accessor song-lyrics :initform nil)))
@@ -48,7 +49,8 @@
 
 (defmethod print-object ((obj song) stream)
   (print-unreadable-object (obj stream :type nil)
-    (format stream "~A (~A) ~A"
+    (format stream "~A ~A (~A) ~A"
+            (song-artist-name obj)
             (song-name obj)
             (song-duration obj)
             (song-url obj))))

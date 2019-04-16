@@ -8,6 +8,7 @@
            genre
            genre-name
            song
+           song-artist-name
            song-name
            song-duration
            song-url

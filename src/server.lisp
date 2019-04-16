@@ -26,8 +26,10 @@
   `(loop for song in ,lst
          do (htm (:p (:a :href (song-url song)
                          :class (str "song")
-                         (str (song-name song)))
-                     (str (format nil " [~a]" (song-duration song)))))))
+                         (str (format nil  "~a - ~a "
+                                      (song-artist-name song)
+                                      (song-name song))))
+                     (str (format nil "[~a]" (song-duration song)))))))
 
 (defparameter *pause-button* "⏸")
 (defparameter *play-button* "▶")

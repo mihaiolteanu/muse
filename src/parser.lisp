@@ -90,21 +90,22 @@ Useful for testing the parser or playing around."
          (parser::*artist-similar* parser::*test-artist-similar*))
      ,@body))
 
-(defun new-songs (raw)
+(defun new-songs (raw artist)
   "Create a list of song objects from raw parsed data"
   (map 'list (lambda (song)
                (make-instance 'song
+                :artist   artist
                 :name     (first song)
                 :duration (second song)
                 :url      (third song)))
        raw))
 
-(defun new-albums (raw)
+(defun new-albums (raw artist)
   (map 'list (lambda (album)
                (make-instance 'album
                 :name  (first album)
                 :year  (second album)
-                :songs (new-songs (third album))))
+                :songs (new-songs (third album) artist)))
        raw))
 
 (defun new-artist (artist)
@@ -116,7 +117,7 @@ Useful for testing the parser or playing around."
                           (make-instance 'genre :name g))
                   (second bio))
      :similar (first bio)
-     :albums (new-albums (third bio)))))
+     :albums (new-albums (third bio) (clean-name artist)))))
 
 ;; (defvar *metalstorm-url* "http://www.metalstorm.net/bands/index.php?b_where=s.style&b_what=Doom&prefix=Funeral")
 ;; (defvar *metalstorm-bands-genre-url*

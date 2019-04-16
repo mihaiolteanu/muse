@@ -35,6 +35,7 @@ download the artist from the web and save it in the db."
                           (format nil "artist=\"~a\"" artist))))
           (mapcar (lambda (song)
                     (make-instance 'song
+                     :artist   (clean-name artist)
                      :name     (third song)
                      :duration (fifth song)
                      :url      (fourth song)))
@@ -47,7 +48,8 @@ download the artist from the web and save it in the db."
 (defun all-songs ()
   "Retrieve all available songs from the db as a list of song objects"
   (mapcar (lambda (s)
-          (make-instance 'song
+            (make-instance 'song
+                         :artist (first s)
                          :name (third s)
                          :url (fourth s)
                          :duration (fifth s)))
