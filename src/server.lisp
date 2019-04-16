@@ -3,6 +3,10 @@
 (defparameter *port* 4007)
 (load #P"~/muserc.lisp" :if-does-not-exist nil)
 
+(defparameter *pause-button* "⏸")
+(defparameter *play-button* "▶")
+(defparameter *play-pause-button* *play-button*)
+
 (defparameter *my-acceptor*
   (make-instance
    'easy-acceptor :port *port*
@@ -47,10 +51,6 @@
                     :href (format nil "/tag/~a" name)
                     (str name))
             (:br)))))
-
-(defparameter *pause-button* "⏸")
-(defparameter *play-button* "▶")
-(defparameter *play-pause-button* *play-button*)
 
 (defmacro standard-page (&body body)
   `(with-html-output-to-string (s)
