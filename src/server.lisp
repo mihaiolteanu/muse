@@ -1,8 +1,11 @@
 (in-package :server)
 
+(defparameter *port* 4007)
+(load #P"~/muserc.lisp" :if-does-not-exist nil)
+
 (defparameter *my-acceptor*
   (make-instance
-   'easy-acceptor :port 4007
+   'easy-acceptor :port *port*
                   :document-root
                   (namestring (merge-pathnames
                                "src/" (asdf:system-relative-pathname :muse "")))))
