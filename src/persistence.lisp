@@ -55,9 +55,32 @@ download the artist from the web and save it in the db."
                          :duration (fifth s)))
           (retrieve "*" "all_songs" 1)))
 
+(defun album-songs-from-id (id artist)
+  (mapcar (lambda (song-id)
+            (let* ((raw-song-list
+                    (retrieve "*" "song"
+                              (format nil "id=~a" (first song-id))))
+                   (raw-song (first raw-song-list)))
+              (make-instance 'song
+                             :artist artist
+                             :name (second raw-song)
+                             :duration (third raw-song)
+                             :url (fourth raw-song))))
+          ;; Get all songs ids from this album id
+          (retrieve "song_id" "album_songs"
+                    (format nil "album_id=~a" id))))
+
 (defun albums (artist)
-  (retrieve "*" "artist_albums_view"
-            (format nil "artist=\"~a\"" artist)))
+  (mapcar (lambda (a)
+            (make-instance 'album
+                           :name (third a)
+                           :year (fourth a)
+                           :songs (album-songs-from-id (first a) artist)))
+          (retrieve "*" "artist_albums_view"
+                    (format nil "artist=\"~a\"" artist))))
+
+;; (with-local-htmls
+;;   (artist-albums (new-artist "Pendragon")))
 
 (defun genres (artist)
   (retrieve "genre" "artist_genres"

@@ -49,6 +49,23 @@
               '("13:43" "9:05" "7:40" "4:02" "5:55" "4:11" "8:16")))
       )))
 
+(test retrieve-album-from-db
+  (with-test-db
+    (with-local-htmls
+      (insert-artist (new-artist "Pendragon"))
+      (is (equal (mapcar #'album-name
+                         (albums "Pendragon"))
+                 '("Pure" "Not of This World" "The Masquerade Overture"
+                   "Believe" "Passion" "The Window of Life")))
+      (is (equal (mapcar #'album-year
+                         (albums "Pendragon"))
+                 '(2008 2001 1996 2005 2011 1993)))
+      (is (equal (mapcar (lambda (s)
+                           (length (album-songs s)))
+                         (albums "Pendragon"))
+                 '(7 11 10 9 7 9))
+          "Correct number of songs in each album"))))
+
 (test insert-artist-in-db
   (with-test-db
     (with-local-htmls
@@ -65,18 +82,6 @@
              "Transatlantic" "RPWL")))
       ;; All albums available
       (is (= (length (albums "Pendragon")) 6))
-      (is (every (lambda (a)
-                   (string= (second a) "Pendragon"))
-                 (albums "Pendragon")))
-      ;; Album id autoincrement
-      (is (equal (mapcar #'first
-                         (albums "Pendragon"))
-                 '(1 2 3 4 5 6)))
-      ;; Album names
-      (is (equal (mapcar #'third
-                         (albums "Pendragon"))
-                 '("Pure" "Not of This World" "The Masquerade Overture"
-                   "Believe" "Passion" "The Window of Life")))
       ;; All songs parsed
       (is (= (length (all-songs)) 53))
       (is (= (length (songs "Pendragon")) 53))
