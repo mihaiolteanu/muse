@@ -1,10 +1,17 @@
 (in-package :objects)
 
 (defclass artist ()
-  ((name    :initarg :name    :accessor artist-name)
-   (genres  :initarg :genres  :accessor artist-genres)
-   (similar :initarg :similar :accessor artist-similar)
-   (albums  :initarg :albums  :accessor artist-albums)))
+  ((name    :initarg :name
+            :accessor artist-name)
+   (genres  :initarg :genres
+            :initform nil
+            :accessor artist-genres)
+   (similar :initarg :similar
+            :initform nil
+            :accessor artist-similar)
+   (albums  :initarg :albums
+            :initform nil
+            :accessor artist-albums)))
 
 (defclass genre ()
   ((name :initarg :name :accessor genre-name)))

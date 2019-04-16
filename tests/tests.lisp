@@ -56,7 +56,7 @@
       (insert-artist (new-artist "Pendragon"))
       ;; Artist was added
       (is (= (length (artists)) 1))
-      (is (string= (first (first (artists))) "Pendragon"))
+      (is (string= (artist-name (first (artists))) "Pendragon"))
       ;; Simlar artists
       (is (equal
            (mapcar #'first (similar "Pendragon"))

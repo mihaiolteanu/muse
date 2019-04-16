@@ -29,7 +29,11 @@
       (= (first (first available)) 1))))
 
 (defun artists ()
-  (retrieve "*" "artist" "available=1"))
+  (mapcar (lambda (a)
+            (make-instance
+             'artist
+             :name (first a)))
+          (retrieve "*" "artist" "available=1")))
 
 (defun songs (artist)
   "Retrieve all songs for the given artist from the db. If artist is not in the db,

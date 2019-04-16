@@ -68,7 +68,7 @@
   (standard-page
     (:h2 "Available Artists")
     (dolist (artist (artists))
-      (let ((name (first artist)))
+      (let ((name (artist-name artist)))
         (htm (:p (:a :class "artist"
                      :href (format nil "/artist/~a" (url-name name))
                      (str name))))))))
