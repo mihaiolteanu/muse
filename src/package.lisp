@@ -27,6 +27,7 @@
   (:shadowing-import-from :dexador :get)
   (:shadowing-import-from :dexador :delete)
   (:export new-artist
+           tag-artists
            with-local-htmls
            parse-html
            url-name
@@ -41,6 +42,7 @@
            genres
            all-genres
            all-genre-songs
+           genre-artists
            similar
            insert-artist
            with-test-db))

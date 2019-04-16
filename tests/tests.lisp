@@ -201,6 +201,18 @@ entries."
       (is (= (length (songs "Pendragon"))
              53)))))
 
+(test new-genre-artist-if-not-in-db
+  "If artists for the given tag do not exists in the db, make sure to 
+fetch them first and then return the results from the db"
+  (with-test-db
+    (with-local-htmls
+      (let ((artists (genre-artists "melancholic")))
+        (is (= (length artists)
+               63))
+        (is (equal (subseq artists 0 5)
+                   '("Antimatter" "My Dying Bride" "Blackfield"
+                     "Sopor Aeternus & The Ensemble of Shadows" "Juzhin")))))))
+
 (defparameter *localhost* "http://127.0.0.1:~a/")
 
 (test server-interaction

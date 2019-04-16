@@ -92,6 +92,22 @@ download the artist from the web and save it in the db."
                            :name (first g)))
           (retrieve "*" "genre" 1)))
 
+(defun genre-artists (genre)
+  "Return the artists for the given genre from the db. If not found
+in db, fetch from web, save to db and retry."
+  (let ((artists
+          (or (retrieve "artist" "genre_artists"
+                        (format nil "genre=\"~a\"" genre))
+              (progn
+                (let ((artists (tag-artists genre)))
+                  ;; Only continue if genre actually exists
+                  (when artists
+                    (insert-genre-artists genre
+                                          (tag-artists genre))
+                    ;; Try again
+                    (genre-artists genre)))))))
+    (apply #'append artists)))
+
 (defun all-genre-songs (genre)
   (let ((artists (retrieve "artist" "artist_genres"
                            (format nil "genre=\"~a\"" genre))))
@@ -161,6 +177,11 @@ download the artist from the web and save it in the db."
     (insert-genres-assoc name (artist-genres artist))
     (insert-albums name (artist-albums artist))))
 
+(defun insert-genre-artists (genre artists)
+  (execute "INSERT INTO genre_artists(artist,genre) VALUES~{(~{\"~A\"~^,~})~^,~}"
+           (mapcar (lambda (a)
+                     (list a genre))
+                   artists)))
 
 ;; Delete from db
 (defun clean-db ()
