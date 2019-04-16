@@ -80,11 +80,17 @@ download the artist from the web and save it in the db."
                     (format nil "artist=\"~a\"" artist))))
 
 (defun genres (artist)
-  (retrieve "genre" "artist_genres"
-            (format nil "artist=\"~a\"" artist)))
+  (mapcar (lambda (g)
+            (make-instance 'genre
+                           :name (first g)))
+          (retrieve "genre" "artist_genres"
+                    (format nil "artist=\"~a\"" artist))))
 
 (defun all-genres ()
-  (retrieve "*" "genre" 1))
+  (mapcar (lambda (g)
+            (make-instance 'genre
+                           :name (first g)))
+          (retrieve "*" "genre" 1)))
 
 (defun all-genre-songs (genre)
   (let ((artists (retrieve "artist" "artist_genres"
