@@ -47,6 +47,13 @@
       (is-true
        (equal (mapcar #'song-duration pure-album-songs)
               '("13:43" "9:05" "7:40" "4:02" "5:55" "4:11" "8:16")))
+      (is (= (length (tag-artists "melancholic"))
+             63))
+      (is (equal (subseq (tag-artists "melancholic") 0 10)
+                 '("Antimatter" "My Dying Bride" "Blackfield"
+                   "Sopor Aeternus & The Ensemble of Shadows"
+                   "Juzhin" "Lake of Tears" "Anathema" "Katatonia"
+                   "Radiohead" "Placebo")))
       )))
 
 (test retrieve-album-from-db

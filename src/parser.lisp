@@ -27,6 +27,13 @@
 (defvar *album-page*
   *lastfm-album-page*)
 
+(defvar *lastfm-tag-artists*
+  "https://www.last.fm/tag/~a/artists?page=~a")
+(defvar *test-tag-artists*
+  (namestring (merge-pathnames "tests/html/tag/~a/~a.html" *root-path*)))
+(defvar *tag-artists*
+  *lastfm-tag-artists*)
+
 (defvar *lastfm-user-loved-url*
   "https://www.last.fm/user/~A/loved")
 
@@ -96,7 +103,8 @@
 Useful for testing the parser or playing around."
   `(let ((*artist-page* *test-artist-page*)
          (*album-page* *test-album-page*)
-         (*artist-similar* *test-artist-similar*))
+         (*artist-similar* *test-artist-similar*)
+         (*tag-artists* *test-tag-artists*))
      ,@body))
 
 (defun new-songs (raw artist)
@@ -127,6 +135,17 @@ Useful for testing the parser or playing around."
                   (second bio))
      :similar (first bio)
      :albums (new-albums (third bio) (clean-name artist)))))
+
+(defun tag-artists (tag)
+  "Get a list of artists with the tag genre from the first 3 pages."
+  (apply #'append
+         (mapcar (lambda (page)
+                   (let ((node
+                           (parse-html
+                            *tag-artists* tag page)))
+                     (coerce ($ node "h3.big-artist-list-title" (text))
+                             'list)))
+                 '(1 2 3))))
 
 ;; (defvar *genius-lyrics-url* "https://genius.com/~A-lyrics")
 ;; (defun genius-lyrics (artist-song)
