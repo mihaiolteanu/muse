@@ -103,19 +103,6 @@
       (:h2 (str (format nil "~a songs" artist)))
       (display-songs (songs artist)))))
 
-(defun s-genres ()
-  (standard-page
-      (:h2 "Available Genres")
-    (loop for (g) in (all-genres)
-          do (htm (:p (:a :href (format nil "/genre/~a" g)
-                          (str g)))))))
-
-(defun s-genre-songs ()
-  (let ((genre (genre-from-uri)))
-    (standard-page
-        (:h2 (str (format nil "~a songs" genre)))
-      (display-songs (all-genre-songs genre)))))
-
 (defun redirect-to-source ()
   "Only redirect back to calling source, when such a source was given"
   (let ((source-uri (get-parameter "source-uri")))
