@@ -21,6 +21,13 @@
    (format nil "SELECT ~a FROM ~a WHERE ~a"
            what from-where condition)))
 
+(defun available-p (artist)
+  (let ((available
+          (retrieve "available" "artist"
+                    (format nil "name=\"~a\"" artist))))
+    (when available
+      (= (first (first available)) 1))))
+
 (defun artists ()
   (retrieve "*" "artist" "available=1"))
 
