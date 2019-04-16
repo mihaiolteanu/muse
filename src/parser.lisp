@@ -7,19 +7,28 @@
 ;; the real deal is used by the app (third parameter), but this should
 ;; be overwritten for test pourposes by the second parameter.
 
-(defvar *lastfm-artist-page* "https://www.last.fm/music/~A")
-(defvar *test-artist-page*   (namestring (merge-pathnames "tests/html/music/~A/main.html" *root-path*)))
-(defvar *artist-page*        *lastfm-artist-page*)
+(defvar *lastfm-artist-page*
+  "https://www.last.fm/music/~A")
+(defvar *test-artist-page*
+  (namestring (merge-pathnames "tests/html/music/~A/main.html" *root-path*)))
+(defvar *artist-page*
+  *lastfm-artist-page*)
 
-(defvar *lastfm-artist-similar* "https://www.last.fm/music/~A/+similar")
-(defvar *test-artist-similar* (namestring (merge-pathnames "tests/html/music/~A/similar.html" *root-path*)))
-(defvar *artist-similar* *lastfm-artist-similar*)
+(defvar *lastfm-artist-similar*
+  "https://www.last.fm/music/~A/+similar")
+(defvar *test-artist-similar*
+  (namestring (merge-pathnames "tests/html/music/~A/similar.html" *root-path*)))
+(defvar *artist-similar*
+  *lastfm-artist-similar*)
 
-(defvar *lastfm-album-page*  "https://www.last.fm/music/~A")
-(defvar *test-album-page*    (namestring (merge-pathnames "tests/html/music/~A.html" *root-path*)))
-(defvar *album-page*         *lastfm-album-page*)
+(defvar *lastfm-album-page* "https://www.last.fm/music/~A")
+(defvar *test-album-page*
+  (namestring (merge-pathnames "tests/html/music/~A.html" *root-path*)))
+(defvar *album-page*
+  *lastfm-album-page*)
 
-(defvar *lastfm-user-loved-url* "https://www.last.fm/user/~A/loved")
+(defvar *lastfm-user-loved-url*
+  "https://www.last.fm/user/~A/loved")
 
 (defun url-name (str)
   "Replace any spaces with pluses; string will be used in url address and requests"
