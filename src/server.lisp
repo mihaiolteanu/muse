@@ -59,6 +59,8 @@
            :href (conc "/next?source-uri=" (request-uri*)) "⏩")
        (:br)
        (:a :href "/artists" "artists")
+       (:whitespace " ")
+       (:a :href "/tags" "tags")
        ,@body))))
 
 (defun server-status ()
