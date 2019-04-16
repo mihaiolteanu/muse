@@ -6,16 +6,6 @@
 (defun last-insert-rowid ()
   (execute-single *db* "SELECT last_insert_rowid()"))
 
-(defun available-p (artist)
-  (let ((available
-          (execute-single *db*
-           (format nil
-                   "SELECT available FROM artist WHERE name=\"~a\""
-                   artist))))
-    (when available
-      (= available 1))))
-
-;; Extract from db
 (defun retrieve (what from-where condition)
   (execute-to-list *db*
    (format nil "SELECT ~a FROM ~a WHERE ~a"
