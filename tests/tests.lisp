@@ -179,6 +179,37 @@
                      "https://www.youtube.com/watch?v=1sDjW-NL0uQ"
                      "https://www.youtube.com/watch?v=_8onzQSfoME")))))))
 
+(test new-artist-if-artist-not-in-db
+  "If the artist is not in the database, calling songs should retrieve
+it first, save it in the db and then returning the correct number of
+entries."
+  (with-test-db
+    (with-local-htmls
+      (is (= (length (songs "Pendragon"))
+             53)))))
+
+(defparameter *localhost* "http://127.0.0.1:~a/")
+
+(test server-interaction
+  "Test the pages returned by the http server"
+  (load #P"~/muserc.lisp" :if-does-not-exist nil)
+  (let ((localhost (format nil *localhost* *port*)))
+    (with-test-db
+      (with-local-htmls
+        (is (= (length (artists)) 0))
+        (insert-artist (new-artist "Pendragon"))
+        (insert-artist (new-artist "Lost in Kiev"))
+        (let ((artists
+                (let ((node (parse-html (concatenate 'string localhost "artists"))))
+                  ($ node "a.artist" (text)))))
+          (is (= (length (artists)) 2))
+          (is (equalp artists #("Pendragon" "Lost in Kiev"))
+              "The artists page returned by the server contains the
+          two artists just added"))))))
+
+
+(setf 5am:*run-test-when-defined* T)
+
 ;; (run!)
 
 ;; (progn (ql:quickload :muse)
