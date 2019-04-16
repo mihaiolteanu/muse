@@ -119,56 +119,6 @@ Useful for testing the parser or playing around."
      :similar (first bio)
      :albums (new-albums (third bio) (clean-name artist)))))
 
-;; (defvar *metalstorm-url* "http://www.metalstorm.net/bands/index.php?b_where=s.style&b_what=Doom&prefix=Funeral")
-;; (defvar *metalstorm-bands-genre-url*
-;;   "http://www.metalstorm.net/bands/index.php?b_where=s.style&b_what=~A&prefix=~A")
-;; (defvar *metalstorm-band-page* "http://www.metalstorm.net/bands/~A")
-;; (defvar *metalstorm-album-tracks* "http://www.metalstorm.net/bands/~A")
-
-;; (defun metalstorm-bands (prefix genre &optional (count 10))
-;;   "i.e. Funeral doom should be given with prefix=funeral and genre=doom"
-;;   (let* ((url (format nil *metalstorm-bands-genre-url* genre prefix))
-;;          (request (dex:get url))
-;;          (parsed (plump:parse request))
-;;          (bands (lquery:$ parsed "table.table td b a"
-;;                   (map (lambda (node)
-;;                          (list (plump:text node)
-;;                                (plump:attribute node "href")))))))
-    
-;;     (or (and (>= (length bands) count)
-;;              (subseq bands 0 count))
-;;         bands)))
-
-;; (defun band-discography (band-link)
-;;   (let* ((url (format nil *metalstorm-band-page* band-link))
-;;          (request (dex:get url))
-;;          (parsed (plump:parse request))
-;;          (discs (lquery:$ parsed "#discotab1 td a[href^=album]"
-;;                   (map (lambda (node)
-;;                          (list (plump:text node)
-;;                                (plump:attribute node "href")))))))
-;;     discs))
-
-;; (defun album-tracks (album-link)
-;;   (let* ((url (format nil *metalstorm-album-tracks* album-link))
-;;          (request (dex:get url))
-;;          (parsed (plump:parse request)))
-;;     parsed))
-
-;; ;;;; Metalstorm example usage
-;; (defvar *request* (dex:get *metalstorm-url*))
-;; (defvar *parsed* (plump:parse *request*))
-;; (defvar *bands+band-link*
-;;   (lquery:$ *parsed* "table.table td b a"
-;;     (map (lambda (node)
-;;            (list (plump:text node)
-;;                  (plump:attribute node "href"))))))
-
-;; (and (> (length *bands+band-link*)
-;;         10)
-;;      (subseq  *bands+band-link* 0 10))
-
-
 ;; (defvar *genius-lyrics-url* "https://genius.com/~A-lyrics")
 ;; (defun genius-lyrics (artist-song)
 ;;   (with-lqueryed-url *genius-lyrics-url* (artist-song)
