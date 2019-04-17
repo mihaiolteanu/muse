@@ -145,7 +145,7 @@ Useful for testing the parser or playing around."
          (mapcar (lambda (page)
                    (let ((node
                            (parse-html
-                            *tag-artists* tag page)))
+                            *tag-artists* (url-name tag) page)))
                      (coerce ($ node "h3.big-artist-list-title" (text))
                              'list)))
                  '(1 2 3))))
