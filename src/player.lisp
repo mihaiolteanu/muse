@@ -69,10 +69,17 @@ but we don't want that to happend when the command is next-song, for example "
 (defun play-url (url &key (video nil))
   "Open the given url with mpv with audio only, by default or with video
 if video is specified as T "
-  (run-program
-   (if video
-       (format nil "mpv --save-position-on-quit --input-ipc-server=~a ~A" *mpvsocket* url)
-       (format nil "mpv --save-position-on-quit --vid=no --input-ipc-server=~a ~A" *mpvsocket* url))))
+  (handler-case
+      (run-program
+       (if video
+           (format nil "mpv --save-position-on-quit --input-ipc-server=~a ~A"
+                   *mpvsocket* url)
+           (format nil "mpv --save-position-on-quit --vid=no --input-ipc-server=~a ~A"
+                   *mpvsocket* url)))
+    (subprocess-error ()
+      ;; The link might not be valid or video is "not available in your location"
+      ;; Might try to find another link on youtube in the future, and save it in db.
+      (format nil "~a is not good~%" url))))
 
 (defun kill-player()
   "Prevents reopening the player with a new song from list"
