@@ -28,7 +28,7 @@ but we don't want that to happend when the command is next-song, for example "
      ;; save-position-on-quit also saves the --vid=no property
      (set-mpv-property "vid" "yes")
      (quit)
-     (play (song-url *playing-song*) :video T))))
+     (play-url (song-url *playing-song*) :video T))))
 
 (defun previous-song ()
   (go-to-song-beginning)
@@ -64,9 +64,9 @@ but we don't want that to happend when the command is next-song, for example "
 
 (defun play-song (song)
   (declare (song song))
-  (play (song-url song)))
+  (play-url (song-url song)))
 
-(defun play (url &key (video nil))
+(defun play-url (url &key (video nil))
   "Open the given url with mpv with audio only, by default or with video
 if video is specified as T "
   (run-program
