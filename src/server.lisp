@@ -71,21 +71,17 @@
            (:a :href "/tags" "tags"))
        ,@body))))
 
-(defun home-page ()
-  (standard-page
-    (:h2 "Nothing to see here")))
-
 (defun server-status ()
   (standard-page
     (:h2 "Server Status")
     (:h3 "Player Status")
-    (:p :class "player-status"
-        (if (playing?)
-            (htm
-              (:p :class "playing-song"
-                  (str "playing")
-                  (display-songs (list (what-is-playing)))))
-            (str "stopped")))))
+    (if (playing?)
+        (htm
+         (:div :class "player-status" (str "playing"))
+         (:p :class "playing-song"
+             (display-songs (list (what-is-playing)))))
+        (htm
+         (:div :class "player-status" (str "stopped"))))))
 
 (defun s-artists ()
   (standard-page
@@ -192,8 +188,7 @@ artists page, play similar artists, and so on."
                                 *base-directory*)))
              (mapcar (lambda (args)
                        (apply 'create-prefix-dispatcher args))
-                     '(("/home" home-page)
-                       ("/status" server-status)
+                     '(("/home" server-status)
                        ("/video" s-continue-with-video)
                        ("/stop" s-stop)
                        ("/previous" s-previous)
