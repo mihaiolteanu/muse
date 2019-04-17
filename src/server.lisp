@@ -24,7 +24,8 @@
    (first (last (cl-utilities:split-sequence #\/ (request-uri*))))))
 
 (defun tag-from-uri ()
-  (first (last (cl-utilities:split-sequence #\/ (request-uri*)))))
+  (clean-name
+   (first (last (cl-utilities:split-sequence #\/ (request-uri*))))))
 
 (defmacro display-songs (lst)
   `(loop for song in ,lst
@@ -48,7 +49,7 @@
   `(dolist (tag ,tags)
      (let ((name (genre-name tag)))
        (htm (:a :class "tag"
-                :href (format nil "/tag/~a" name)
+                :href (format nil "/tag/~a" (url-name name))
                 (str name))))))
 
 (defmacro standard-page (&body body)
