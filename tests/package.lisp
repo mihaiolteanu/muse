@@ -1,5 +1,11 @@
 (defpackage :muse-tests
-  (:use :cl :fiveam :persistence :objects :parser)
+  (:use
+   :cl :dexador :plump :lquery
+   :fiveam :mockingbird
+   :persistence :objects
+   :parser)
+  (:shadowing-import-from :dexador :get)
+  (:shadowing-import-from :dexador :delete)
   (:export run!
            all-tests))
 
