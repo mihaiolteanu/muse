@@ -28,12 +28,18 @@
    (first (last (cl-utilities:split-sequence #\/ (request-uri*))))))
 
 (defmacro display-songs (lst)
+(defmacro display-songs (lst &key (with-artist nil))
+  "We don't need to display the artist name all the time for
+evey song on the page, since that info can be inferred."
   `(loop for song in ,lst
          do (htm (:a :href (song-url song)
-                         :class (str "song")
-                         (str (format nil  "~a - ~a "
-                                      (song-artist-name song)
-                                      (song-name song))))
+                     :class (str "song")
+                     (str
+                      ,(if with-artist
+                           `(format nil  "~a - ~a "
+                                    (song-artist-name song)
+                                    (song-name song))
+                           `(format nil "~a" (song-name song)))))
                  (str (format nil "[~a]" (song-duration song)))
                  (:br))))
 
@@ -80,7 +86,7 @@
         (htm
          (:div :class "player-status" (str "playing"))
          (:p :class "playing-song"
-             (display-songs (list (what-is-playing)))))
+             (display-songs (list (what-is-playing)) :with-artist t)))
         (htm
          (:div :class "player-status" (str "stopped"))))))
 
