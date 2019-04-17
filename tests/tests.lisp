@@ -188,6 +188,18 @@ fetch them first and then return the results from the db"
                       "Pendragon - Comatose, Part III: Home and Dry "))))
       )))
 
+(test tags-retrieval
+  (with-test-db
+    (with-local-htmls
+      (let* ((node (parse-html (build-url "tag/progressive+rock")))
+             (artists ($ node "a.artist" (text))))
+        (is (= (length artists) 63))
+        (is (equalp (subseq artists 0 10)
+                    #("Pink Floyd" "Muse" "Porcupine Tree" "Tool"
+                      "The Mars Volta" "King Crimson" "Rush"
+                      "Led Zeppelin" "Yes" "Genesis")))))))
+
+
 (setf 5am:*run-test-when-defined* T)
 
 ;; (run!)
