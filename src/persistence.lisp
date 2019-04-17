@@ -105,7 +105,7 @@ in db, fetch from web, save to db and retry."
           (let ((artists (tag-artists genre)))
             ;; Only continue if genre actually exists
             (when artists
-              (insert-genre-artists genre (tag-artists genre))
+              (insert-genre-artists genre artists)
               ;; Try again
               (genre-artists genre)))))))
 
