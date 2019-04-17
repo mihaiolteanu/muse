@@ -1,0 +1,32 @@
+p.play-buttons {
+    margin-top: 30px;
+    text-align: center;
+    border-bottom: solid;
+}
+
+p.play-buttons a {
+    font-size: 200%;
+    margin: 10px;
+    text-decoration: none;
+    color: green;
+}
+
+p.menu-bar {
+    text-align: center;
+    font-size: 150%;
+    border-bottom: solid;
+}
+
+p.menu-bar a {
+    text-decoration: none;
+    margin: 20px;
+}
+
+a.tag {
+    margin: 10px;
+}
+
+h2 { text-align: center }
+body { text-align: center }
+
+

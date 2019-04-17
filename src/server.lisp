@@ -48,30 +48,32 @@
   `(dolist (tag ,tags)
      (let ((name (genre-name tag)))
        (htm (:a :class "tag"
-                    :href (format nil "/tag/~a" name)
-                    (str name))
-            (:br)))))
+                :href (format nil "/tag/~a" name)
+                (str name))))))
 
 (defmacro standard-page (&body body)
   `(with-html-output-to-string (s)
      (:html
+      (:head
+       (:link :type "text/css"
+              :rel "stylesheet"
+              :href "/css/muse.css"))
       (:body
-       (:a :style "text-decoration:none"
-           :href (conc "/stop?source-uri=" (request-uri*)) "⏹")
-       (:text " ")
-       (:a :style "text-decoration:none"
-           :href (conc "/previous?source-uri=" (request-uri*)) "⏪")
-       (:text " ")
-       (:a :style "text-decoration:none"
-           :href (conc "/play-pause?source-uri=" (request-uri*)) (str *play-pause-button*))
-       (:text " ")
-       (:a :style "text-decoration:none"
-           :href (conc "/next?source-uri=" (request-uri*)) "⏩")
-       (:br)
-       (:a :href "/artists" "artists")
-       (:whitespace " ")
-       (:a :href "/tags" "tags")
+       (:p :class "play-buttons"
+           (:a :href (conc "/stop?source-uri=" (request-uri*)) "⏹")
+           (:a :href (conc "/previous?source-uri=" (request-uri*)) "⏪")
+           (:a :href (conc "/play-pause?source-uri=" (request-uri*))
+               (str *play-pause-button*))
+           (:a :href (conc "/next?source-uri=" (request-uri*)) "⏩"))
+       (:p :class "menu-bar"
+           (:a :href "/home" "home")
+           (:a :href "/artists" "artists")
+           (:a :href "/tags" "tags"))
        ,@body))))
+
+(defun home-page ()
+  (standard-page
+    (:h2 "Nothing to see here")))
 
 (defun server-status ()
   (standard-page
@@ -182,13 +184,16 @@ artists page, play similar artists, and so on."
               (create-regex-dispatcher "^/artist/[a-zA-Z0-9 ]+$" 's-artist-info)
               (create-regex-dispatcher "^/tag/[a-zA-Z0-9 ]+$" 's-tag-artists)
               (create-regex-dispatcher "^/similar/[a-zA-Z0-9 ]+$" 's-artist-similar)
-              (create-folder-dispatcher-and-handler
-               "/img/"
+              (create-folder-dispatcher-and-handler "/img/"
                (merge-pathnames (make-pathname :directory '(:relative "img"))
+                                *base-directory*))
+              (create-folder-dispatcher-and-handler "/css/"
+               (merge-pathnames (make-pathname :directory '(:relative "css"))
                                 *base-directory*)))
              (mapcar (lambda (args)
                        (apply 'create-prefix-dispatcher args))
-                     '(("/status" server-status)
+                     '(("/home" home-page)
+                       ("/status" server-status)
                        ("/video" s-continue-with-video)
                        ("/stop" s-stop)
                        ("/previous" s-previous)
