@@ -93,23 +93,21 @@ download the artist from the web and save it in the db."
           (retrieve "*" "genre" 1)))
 
 (defun genre-artists (genre)
-  "Return the artists for the given genre from the db. If not found
+    "Return the artists for the given genre from the db. If not found
 in db, fetch from web, save to db and retry."
-  (let ((artists
-          (or (retrieve "artist" "genre_artists"
-                        (format nil "genre=\"~a\"" genre))
-              (progn
-                (let ((artists (tag-artists genre)))
-                  ;; Only continue if genre actually exists
-                  (when artists
-                    (insert-genre-artists genre
-                                          (tag-artists genre))
-                    ;; Try again
-                    (genre-artists genre)))))))
-    (mapcar (lambda (a)
-              (make-instance 'artist
-                             :name (first a)))
-            artists)))
+  (let ((artists (retrieve "artist" "genre_artists"
+                           (format nil "genre=\"~a\"" genre))))
+    (if artists
+        (mapcar (lambda (a)
+                  (make-instance 'artist :name (first a)))
+                artists)
+        (progn
+          (let ((artists (tag-artists genre)))
+            ;; Only continue if genre actually exists
+            (when artists
+              (insert-genre-artists genre (tag-artists genre))
+              ;; Try again
+              (genre-artists genre)))))))
 
 (defun all-genre-songs (genre)
   (let ((artists (retrieve "artist" "artist_genres"
