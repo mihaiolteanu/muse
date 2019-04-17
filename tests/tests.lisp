@@ -143,25 +143,50 @@ fetch them first and then return the results from the db"
                      "Sopor Aeternus & The Ensemble of Shadows" "Juzhin")))
         ))))
 
-(defparameter *localhost* "http://127.0.0.1:~a/")
+(load #P"~/muserc.lisp" :if-does-not-exist nil)
+(defparameter *localhost* (format nil "http://127.0.0.1:~a/" *port*))
+
+(defun build-url (param)
+  (let ((localhost (format nil *localhost* *port*)))
+    (concatenate 'string localhost param)))
 
 (test server-interaction
   "Test the pages returned by the http server"
-  (load #P"~/muserc.lisp" :if-does-not-exist nil)
-  (let ((localhost (format nil *localhost* *port*)))
-    (with-test-db
+  (with-test-db
       (with-local-htmls
         (is (= (length (artists)) 0))
         (insert-artist (new-artist "Pendragon"))
         (insert-artist (new-artist "Lost in Kiev"))
-        (let ((artists
-                (let ((node (parse-html (concatenate 'string localhost "artists"))))
-                  ($ node "a.artist" (text)))))
-          (is (= (length (artists)) 2))
+
+        (let* ((node (parse-html (build-url "artists")))
+               (artists ($ node "a.artist" (text))))
           (is (equalp artists #("Pendragon" "Lost in Kiev"))
               "The artists page returned by the server contains the
-          two artists just added"))))))
+          two artists just added"))
 
+        (let* ((node (parse-html (build-url "tags")))
+               (tags ($ node "a.tag" (text))))
+          (is (equalp tags
+                      #("progressive rock" "neo-prog" "neo progressive rock"
+                        "rock" "progressive" "neo-progressive rock"
+                        "post-rock" "post-metal" "instrumental" "french"))))
+
+        (let* ((node (parse-html (build-url "artist/Pendragon")))
+               (pendragon-tags ($ node "a.tag" (text))))
+          (is (equalp pendragon-tags
+                      #("progressive rock" "neo-prog" "neo progressive rock"
+                        "rock" "progressive" "neo-progressive rock"))))
+
+        (let* ((node (parse-html (build-url "artist/Pendragon")))
+               (pendragon-songs ($ node "a.song" (text))))
+          (is (= (length pendragon-songs) 53))
+          (is (equalp (subseq pendragon-songs 0 5)
+                      #("Pendragon - Indigo "
+                        "Pendragon - Eraserhead "
+                        "Pendragon - Comatose, Part I: View From the Seashore "
+                        "Pendragon - Comatose, Part II: Space Cadet "
+                        "Pendragon - Comatose, Part III: Home and Dry "))))
+        )))
 
 (setf 5am:*run-test-when-defined* T)
 
