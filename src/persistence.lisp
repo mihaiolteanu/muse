@@ -198,6 +198,7 @@ in db, fetch from web, save to db and retry."
   (execute "DELETE FROM sqlite_sequence where name=\"album\"")
   (execute "DELETE FROM artist")
   (execute "DELETE FROM genre")
+  (execute "DELETE FROM genre_artists")
   (execute "DELETE FROM song")
   (execute "DELETE FROM sqlite_sequence where name=\"song\""))
 
@@ -209,6 +210,7 @@ a setf is needed to temporarily use a test db."
      (setf *db* (connect
                  (merge-pathnames "tests/music_test.db"
                                   (asdf:system-relative-pathname :muse ""))))
+     (clean-db)
      ,@body
      (clean-db)
      (setf *db* original-db)))
