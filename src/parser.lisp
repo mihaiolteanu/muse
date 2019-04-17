@@ -104,11 +104,20 @@
 (defmacro with-local-htmls (&body body)
   "Use local, pre-saved and original last.fm html pages to make requests.
 Useful for testing the parser or playing around."
-  `(let ((*artist-page* *test-artist-page*)
-         (*album-page* *test-album-page*)
-         (*artist-similar* *test-artist-similar*)
-         (*tag-artists* *test-tag-artists*))
-     ,@body))
+  `(let ((original-artist-page *artist-page*)
+         (original-album-page *album-page*)
+         (original-artist-similar *artist-similar*)
+         (original-tag-artists *tag-artists*))
+     (setf *artist-page* *test-artist-page*
+           *album-page* *test-album-page*
+           *artist-similar* *test-artist-similar*
+           *tag-artists* *test-tag-artists*)
+     ,@body
+     (setf *artist-page* original-artist-page
+           *album-page* original-album-page
+           *artist-similar* original-artist-similar
+           *tag-artists* original-tag-artists)
+))
 
 (defun new-songs (raw artist)
   "Create a list of song objects from raw parsed data"
