@@ -11,6 +11,9 @@
 (defun set-mpv-property (property value)
   (send-mpv-command "set_property" property value))
 
+(defun quit ()
+  (send-mpv-command "quit" 0))
+
 (defun go-to-song-beginning ()
   "Set the playtime to 0:00 for the current running song.
 Useful to use before quiting, since we're using the save-position-on-quit,
@@ -42,9 +45,6 @@ but we don't want that to happend when the command is next-song, for example "
 
 (defun seek (seconds)
   (send-mpv-command `("seek" ,seconds)))
-
-(defun quit ()
-  (send-mpv-command "quit" 0))
 
 (defun play-songs (lst)
   (print lst)
