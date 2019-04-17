@@ -49,8 +49,7 @@
 
 (defpackage :player
   (:use :cl :objects :uiop :bt)
-  (:export play-song
-           play-songs
+  (:export play-songs
            continue-with-video
            playing?
            what-is-playing
