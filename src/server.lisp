@@ -32,20 +32,21 @@
     (values (third seq)
             (fifth seq))))
 
-(defmacro display-songs (lst &key (with-artist nil))
+(defmacro display-songs (songs &key (with-artist nil))
   "We don't need to display the artist name all the time for
 evey song on the page, since that info can be inferred."
-  `(loop for song in ,lst
-         do (htm (:a :href (song-url song)
-                     :class (str "song")
-                     (str
-                      ,(if with-artist
-                           `(format nil  "~a - ~a "
-                                    (song-artist-name song)
-                                    (song-name song))
-                           `(format nil "~a" (song-name song)))))
-                 (str (format nil "[~a]" (song-duration song)))
-                 (:br))))
+  `(dolist (song ,songs)
+     (let ((name (song-name song)))
+       (htm (:a :class "song"
+                :href (song-url song)
+                (str
+                 ,(if with-artist
+                      `(format nil  "~a - ~a "
+                               (song-artist-name song)
+                               (song-name song))
+                      `(format nil "~a" (song-name song)))))
+            (str (format nil "[~a]" (song-duration song)))
+            (:br)))))
 
 (defmacro display-artists (artists)
   `(dolist (artist ,artists)
