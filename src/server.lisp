@@ -27,7 +27,11 @@
   (clean-name
    (first (last (cl-utilities:split-sequence #\/ (request-uri*))))))
 
-(defmacro display-songs (lst)
+(defun artist-and-album-from-uri ()
+  (let ((seq (cl-utilities:split-sequence #\/ (request-uri*))))
+    (values (third seq)
+            (fifth seq))))
+
 (defmacro display-songs (lst &key (with-artist nil))
   "We don't need to display the artist name all the time for
 evey song on the page, since that info can be inferred."
@@ -55,7 +59,14 @@ evey song on the page, since that info can be inferred."
   `(dolist (tag ,tags)
      (let ((name (genre-name tag)))
        (htm (:a :class "tag"
-                :href (format nil "/tag/~a" (url-name name))
+                :href (format nil "/tag/~a" (url-name name)))
+
+(defmacro display-albums (albums)
+  "Return a html snippet with all album names"
+  `(dolist (album ,albums)
+     (let ((name (album-name album)))
+       (htm (:a :class "album"
+                :href (format nil "/artist/~a/album/~a" (url-name artist) (url-name name))
                 (str name))))))
 
 (defmacro standard-page (&body body)
@@ -111,14 +122,41 @@ evey song on the page, since that info can be inferred."
     (standard-page
       (:h2 (str (format nil "~a tags" artist)))
       (display-tags (genres artist))
+      (:h2 (str (format nil "~a albums" artist)))
+      (display-albums (albums artist))
       (:h2 (str (format nil "~a songs" artist)))
       (display-songs (songs artist)))))
+
+(defun s-artist-album ()
+  (multiple-value-bind (artist album)
+      (artist-and-album-from-uri)
+    (setf artist (clean-name artist))
+    (setf album (clean-name album))
+    (standard-page
+      (:h2 (str (format nil "~a - ~a (album)" album artist)))
+      (let ((alb (find album (albums artist)
+                       :key #'album-name
+                       :test #'string=)))
+        (when alb
+          (display-songs (album-songs alb)))))))
 
 (defun redirect-to-source ()
   "Only redirect back to calling source, when such a source was given"
   (let ((source-uri (get-parameter "source-uri")))
     (when source-uri
       (redirect (url-name source-uri)))))
+
+(defun toggle-play-pause ()
+  (if (string= *play-pause-button* *play-button*)
+      (setf *play-pause-button* *pause-button*)
+      (setf *play-pause-button* *play-button*))
+  (play-pause))
+
+(defun split-play-parameter (param)
+  ;; First element after splitting will be an empty string; skip it
+  (rest (uiop:split-string
+         param
+         :separator "/")))
 
 (defun s-play-pause ()
   "If the player is already started, toggle the play/pause status of
@@ -185,6 +223,8 @@ artists page, play similar artists, and so on."
 (setq *dispatch-table*
       (nconc (list              
               (create-regex-dispatcher "^/artist/[a-zA-Z0-9 ]+$" 's-artist-info)
+              (create-regex-dispatcher
+               "^/artist/[a-zA-Z0-9 ]+/album/[a-zA-Z0-9 ]+$" 's-artist-album)
               (create-regex-dispatcher "^/tag/[a-zA-Z0-9 ]+$" 's-tag-artists)
               (create-regex-dispatcher "^/similar/[a-zA-Z0-9 ]+$" 's-artist-similar)
               (create-folder-dispatcher-and-handler "/img/"
