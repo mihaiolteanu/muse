@@ -181,12 +181,10 @@ fetch them first and then return the results from the db"
              (pendragon-songs ($ node "a.song" (text))))
         (is (= (length pendragon-songs) 53))
         (is (equalp (subseq pendragon-songs 0 5)
-                    #("Pendragon - Indigo "
-                      "Pendragon - Eraserhead "
-                      "Pendragon - Comatose, Part I: View From the Seashore "
-                      "Pendragon - Comatose, Part II: Space Cadet "
-                      "Pendragon - Comatose, Part III: Home and Dry "))))
-      )))
+                    #("Indigo" "Eraserhead"
+                      "Comatose, Part I: View From the Seashore"
+                      "Comatose, Part II: Space Cadet"
+                      "Comatose, Part III: Home and Dry")))))))
 
 (test tags-retrieval
   (with-test-db
