@@ -55,11 +55,19 @@ evey song on the page, since that info can be inferred."
                     (str name))
             (:br)))))
 
+(defmacro display-similar (artists)
+  `(dolist (artist ,artists)
+     (let ((name (artist-name artist)))
+       (htm (:a :class "similar"
+                :href (format nil "/artist/~a" (url-name name))
+                (str name))))))
+
 (defmacro display-tags (tags)
   `(dolist (tag ,tags)
      (let ((name (genre-name tag)))
        (htm (:a :class "tag"
-                :href (format nil "/tag/~a" (url-name name)))))))
+                :href (format nil "/tag/~a" (url-name name))
+                (str name))))))
 
 (defmacro display-albums (albums)
   "Return a html snippet with all album names"
@@ -120,11 +128,13 @@ evey song on the page, since that info can be inferred."
 (defun s-artist-info ()
   (let ((artist (artist-from-uri)))
     (standard-page
-      (:h2 (str (format nil "~a tags" artist)))
+      (:h2 (str artist))
       (display-tags (genres artist))
-      (:h2 (str (format nil "~a albums" artist)))
+      (:h2 (str "similar artists"))
+      (display-similar (similar artist))
+      (:h2 (str "albums"))
       (display-albums (albums artist))
-      (:h2 (str (format nil "~a songs" artist)))
+      (:h2 (str "songs"))
       (display-songs (songs artist)))))
 
 (defun s-artist-album ()
@@ -184,15 +194,6 @@ evey song on the page, since that info can be inferred."
   (when (playing?)
     (continue-with-video)))
 
-(defun s-artist-similar ()
-  (let ((artist (artist-from-uri)))
-    (standard-page
-        (:h2 (str (format nil "~a similar artists" artist)))
-      (loop for (a) in (similar artist)
-            do (htm (:p
-                     (:a :href (format nil "/artist/~a" (url-name a))
-                         (str a))))))))
-
 (defparameter *base-directory*
   (make-pathname
    :name nil
@@ -205,7 +206,6 @@ evey song on the page, since that info can be inferred."
               (create-regex-dispatcher
                "^/artist/[a-zA-Z0-9 ]+/album/[a-zA-Z0-9 ]+$" 's-artist-album)
               (create-regex-dispatcher "^/tag/[a-zA-Z0-9 ]+$" 's-tag-artists)
-              (create-regex-dispatcher "^/similar/[a-zA-Z0-9 ]+$" 's-artist-similar)
               (create-folder-dispatcher-and-handler "/img/"
                (merge-pathnames (make-pathname :directory '(:relative "img"))
                                 *base-directory*))
