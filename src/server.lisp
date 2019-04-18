@@ -59,7 +59,7 @@ evey song on the page, since that info can be inferred."
   `(dolist (tag ,tags)
      (let ((name (genre-name tag)))
        (htm (:a :class "tag"
-                :href (format nil "/tag/~a" (url-name name)))
+                :href (format nil "/tag/~a" (url-name name)))))))
 
 (defmacro display-albums (albums)
   "Return a html snippet with all album names"
