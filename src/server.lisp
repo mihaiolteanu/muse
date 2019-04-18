@@ -159,30 +159,9 @@ evey song on the page, since that info can be inferred."
          :separator "/")))
 
 (defun s-play-pause ()
-  "If the player is already started, toggle the play/pause status of
-the player and change the button status.  Otherwise, figure out what
-page we were on when the button was pressed and play the contents for
-that page based on the url. For example, if we were on an artist page
-when the button was pressed, play that artist songs, if on similar
-artists page, play similar artists, and so on."
   (if (playing?)
-      (progn
-        (if (string= *play-pause-button* *play-button*)
-            (setf *play-pause-button* *pause-button*)
-            (setf *play-pause-button* *play-button*))
-        (play-pause))
-      (let ((what-to-play (uiop:split-string
-                           (get-parameter "source-uri")
-                           :separator "/")))
-        (cond ((string= (second what-to-play) "artist")
-               (play-songs (songs (third what-to-play))))
-
-              ((string= (second what-to-play) "genre")
-               (format t "Playing the ~a genre~%" (third what-to-play)))
-
-              ((string= (second what-to-play) "similar")
-               (format t "Playing similar artists to ~a~%" (third what-to-play))))
-        (setf *play-pause-button* *pause-button*)))
+      (toggle-play-pause)
+      (play (split-play-parameter (get-parameter "source-uri"))))
   (redirect-to-source))
 
 (defun s-previous ()
