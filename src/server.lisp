@@ -51,8 +51,8 @@ evey song on the page, since that info can be inferred."
   `(dolist (artist ,artists)
      (let ((name (artist-name artist)))
        (htm (:a :class "artist"
-                    :href (format nil "/artist/~a" (url-name name))
-                    (str name))
+                :href (format nil "/artist/~a" (url-name name))
+                (str name))
             (:br)))))
 
 (defmacro display-similar (artists)
