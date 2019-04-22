@@ -11,8 +11,7 @@
 (defconstant +buffer-check-timeout+ 60
   "Number of seconds before checking the playlist buffer and adding
 new songs if buffer too small.")
-(defparameter *previous-song* '())
-(defparameter *playing-song* '())
+(defparameter *playing-songs* '())
 
 (defun mpv-command (&rest args)
   (parse
@@ -137,32 +136,29 @@ new songs if buffer too small.")
                        (append-to-playlist (song-url random-song)))))))))
   (start-timeout-checking))
 
+(defmacro choose-song (song-url-action)
+  "Choose a song based on shuffle, save it as the current playing song
+ and then decide what to do with the chosen song's url (play it, return it, etc.)"
+  `(if *shuffle-play*
+       (let ((chosen-song (random-object songs)))
+         (setf *playing-songs* (append *playing-songs* (list chosen-song)))
+         (funcall ,song-url-action (song-url chosen-song)))
+       (progn
+         (let ((chosen-song (first songs)))
+           (setf songs (rest songs))
+           (setf *playing-songs* (append *playing-songs* (list chosen-song)))
+           (funcall ,song-url-action (song-url chosen-song))))))
+
 (defun play-songs (songs)
   (let ((songs (remove-nil-urls songs)))
-    (start-mpv (if *shuffle-play*
-                   (let ((chosen-song (random-object songs)))
-                     (setf *playing-song* chosen-song)
-                     (song-url chosen-song))
-                   (progn
-                     (let ((chosen-song (first songs)))
-                       (setf songs (rest songs))
-                       (setf *playing-song* chosen-song)
-                       (song-url chosen-song)))))
+    (start-mpv (choose-song #'identity))
     (setf *playing-thread*
           (make-thread
            (lambda ()
              (with-lock-held (*playlist-lock*)
                (loop (condition-wait *playlist-check-update* *playlist-lock*)
                      (unless (enough-songs-in-playlist?)
-                       (if *shuffle-play*
-                           (let ((chosen-song (random-object songs)))
-                             (setf *playing-song* chosen-song)
-                             (append-to-playlist
-                              (song-url chosen-song)))
-                           (let ((chosen-song (first songs)))
-                             (setf songs (rest songs))
-                             (setf *playing-song* chosen-song)
-                             (append-to-playlist (song-url chosen-song))))))))))
+                       (choose-song #'append-to-playlist)))))))
     (start-timeout-checking)))
 
 (defun play (what)
@@ -181,7 +177,8 @@ new songs if buffer too small.")
     (thread-alive-p *playing-thread*)))
 
 (defun what-is-playing ()
-  *playing-song*)
+  (nth (playlist-position)
+       *playing-songs*))
 
 (defun playground ()
   (start-mpv "https://www.youtube.com/watch?v=NmyWeOvF_Sg"
