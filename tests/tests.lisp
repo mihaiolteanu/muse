@@ -59,72 +59,74 @@
   (with-test-db
     (with-local-htmls
       (insert-artist (new-artist "Pendragon"))
-      (is (equal (mapcar #'album-name
-                         (albums "Pendragon"))
+      (let ((pendragon (artist-from-db "Pendragon")))
+        (is (equal (mapcar #'album-name
+                           (artist-albums pendragon))
                  '("Pure" "Not of This World" "The Masquerade Overture"
                    "Believe" "Passion" "The Window of Life")))
-      (is (equal (mapcar #'album-year
-                         (albums "Pendragon"))
-                 '(2008 2001 1996 2005 2011 1993)))
-      (is (equal (mapcar (lambda (s)
-                           (length (album-songs s)))
-                         (albums "Pendragon"))
+        (is (equal (mapcar #'album-year
+                           (artist-albums pendragon))
+                   '(2008 2001 1996 2005 2011 1993)))
+        (is (equal (mapcar (lambda (s)
+                             (length (album-songs s)))
+                           (artist-albums pendragon))
                  '(7 11 10 9 7 9))
-          "Correct number of songs in each album"))))
+            "Correct number of songs in each album")))))
 
 (test insert-artist-in-db
   (with-test-db
     (with-local-htmls
-      (is (= (length (artists)) 0))
+      (is (= (length (all-artists)) 0))
       (insert-artist (new-artist "Pendragon"))
       ;; Artist was added
-      (is (= (length (artists)) 1))
-      (is (string= (artist-name (first (artists))) "Pendragon"))
-      ;; Simlar artists
-      (is (equal
-           (mapcar #'artist-name (similar "Pendragon"))
+      (is (= (length (all-artists)) 1))
+      (is (string= (artist-name (first (all-artists))) "Pendragon"))
+      
+      (let ((pendragon (artist-from-db "Pendragon")))
+        ;; Simlar artists
+        (is (equal
+             (mapcar #'artist-name (artist-similar pendragon))
            '("Arena" "IQ" "Satellite" "Pallas" "Marillion" "The Tangent" "Comedy of Errors"
              "Magenta" "Big Big Train" "Knight Area" "Sylvan" "Fish" "Mostly Autumn"
              "Transatlantic" "RPWL")))
-      ;; All albums available
-      (is (= (length (albums "Pendragon")) 6))
-      ;; All songs parsed
-      (is (= (length (all-songs)) 53))
-      (is (= (length (songs "Pendragon")) 53))
-      ;; Correct song url, duration, etc..
-      (let ((pendragon-songs (songs "Pendragon")))
-        (is (equal
-             (subseq (mapcar #'song-name pendragon-songs)
-                     0 10)
-             '("Indigo" "Eraserhead" "Comatose, Part I: View From the Seashore"
-               "Comatose, Part II: Space Cadet" "Comatose, Part III: Home and Dry"
-               "The Freak Show" "It's Only Me"
-               "If I Were the Wind (and You Were the Rain)"
-               "Dance of the Seven Veils - Pt. 1 Faithless"
-               "Dance of the Seven Veils - Pt. 2 All Over Now")))
-        (is (equal
-             (subseq (mapcar #'song-duration pendragon-songs)
-                     0 10)
-             '("13:43" "9:05" "7:40" "4:02" "5:55"
-               "4:11" "8:16" "9:23" "4:09" "7:31")))
-        (is (equal
-             (subseq (mapcar #'song-url pendragon-songs)
-                     0 10)
-             '("https://www.youtube.com/watch?v=ccr-VkEpE18"
-               "https://www.youtube.com/watch?v=gHeWRLugWQA"
-               "NIL" "NIL" "NIL"
-               "https://www.youtube.com/watch?v=42m2llb0w84"
-               "https://www.youtube.com/watch?v=3obNa5BE5MY"
-               "https://www.youtube.com/watch?v=V4BUn1YYWJE"
-               "NIL" "NIL")))))))
+        ;; All albums available
+        (is (= (length (artist-albums pendragon)) 6))
+        ;; All songs parsed
+        (is (= (length (all-songs)) 53))
+        (is (= (length (artist-songs pendragon)) 53))
+        ;; Correct song url, duration, etc..
+        (let ((pendragon-songs (artist-songs pendragon)))
+          (is (equal
+               (subseq (mapcar #'song-name pendragon-songs)
+                       0 10)
+               '("Indigo" "Eraserhead" "Comatose, Part I: View From the Seashore"
+                 "Comatose, Part II: Space Cadet" "Comatose, Part III: Home and Dry"
+                 "The Freak Show" "It's Only Me"
+                 "If I Were the Wind (and You Were the Rain)"
+                 "Dance of the Seven Veils - Pt. 1 Faithless"
+                 "Dance of the Seven Veils - Pt. 2 All Over Now")))
+          (is (equal
+               (subseq (mapcar #'song-duration pendragon-songs)
+                       0 10)
+               '("13:43" "9:05" "7:40" "4:02" "5:55"
+                 "4:11" "8:16" "9:23" "4:09" "7:31")))
+          (is (equal
+               (subseq (mapcar #'song-url pendragon-songs)
+                       0 10)
+               '("https://www.youtube.com/watch?v=ccr-VkEpE18"
+                 "https://www.youtube.com/watch?v=gHeWRLugWQA"
+                 "NIL" "NIL" "NIL"
+                 "https://www.youtube.com/watch?v=42m2llb0w84"
+                 "https://www.youtube.com/watch?v=3obNa5BE5MY"
+                 "https://www.youtube.com/watch?v=V4BUn1YYWJE"
+                 "NIL" "NIL"))))))))
 
 (test new-artist-if-artist-not-in-db
-  "If the artist is not in the database, calling songs should retrieve
-it first, save it in the db and then returning the correct number of
-entries."
+  "Fetch the artist from web and save it in db if not already in db."
   (with-test-db
     (with-local-htmls
-      (is (= (length (songs "Pendragon"))
+      (is (= (length (artist-songs
+                      (artist-from-db "Pendragon")))
              53)))))
 
 (test new-genre-artist-if-not-in-db
@@ -132,15 +134,14 @@ entries."
 fetch them first and then return the results from the db"
   (with-test-db
     (with-local-htmls
-      (let ((artists (genre-artists "melancholic")))
+      (let ((artists (all-genre-artists "melancholic")))
         (is (= (length artists)
                63))
         (is (equal (subseq (mapcar #'artist-name
-                                   (genre-artists "melancholic"))
+                                   artists)
                            0 5)
                    '("Antimatter" "My Dying Bride" "Blackfield"
-                     "Sopor Aeternus & The Ensemble of Shadows" "Juzhin")))
-        ))))
+                     "Sopor Aeternus & The Ensemble of Shadows" "Juzhin")))))))
 
 (load #P"~/muserc.lisp" :if-does-not-exist nil)
 (defparameter *localhost* (format nil "http://127.0.0.1:~a/" *port*))
@@ -153,7 +154,6 @@ fetch them first and then return the results from the db"
   "Test the pages returned by the http server"
   (with-test-db
     (with-local-htmls
-      (is (= (length (artists)) 0))
       (insert-artist (new-artist "Pendragon"))
       (insert-artist (new-artist "Lost in Kiev"))
 

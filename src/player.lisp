@@ -8,7 +8,7 @@
   "If true, the next song is chosen at random.")
 (defconstant +playlist-buffer+ 2
   "Number of songs availalble in the playlist after the current one")
-(defconstant +buffer-check-timeout+ 15
+(defconstant +buffer-check-timeout+ 60
   "Number of seconds before checking the playlist buffer and adding
 new songs if buffer too small.")
 (defparameter *previous-song* '())
@@ -36,6 +36,7 @@ new songs if buffer too small.")
   (unless (get-mpv-property "pause")
     (play-pause)))
 (defun next-song ()
+  (condition-notify *playlist-check-update*)
   (mpv-command "playlist-next"))
 
 (defun prev-song ()
@@ -122,6 +123,7 @@ new songs if buffer too small.")
 (defun play-artists (artists)
   (let* ((random-artist (artist-from-db (random-object artists)))
          (random-song (random-object (artist-songs random-artist))))
+    (setf *playing-song* random-song)
     (start-mpv (song-url random-song)))
   (setf *playing-thread*
         (make-thread
@@ -131,17 +133,21 @@ new songs if buffer too small.")
                    (unless (enough-songs-in-playlist?)
                      (let* ((random-artist (artist-from-db (random-object artists)))
                             (random-song (random-object (artist-songs random-artist))))
+                       (setf *playing-song* random-song)
                        (append-to-playlist (song-url random-song)))))))))
   (start-timeout-checking))
 
 (defun play-songs (songs)
-  (let ((song-urls (mapcar #'song-url
-                            (remove-nil-urls songs))))
+  (let ((songs (remove-nil-urls songs)))
     (start-mpv (if *shuffle-play*
-                   (random-object song-urls)
+                   (let ((chosen-song (random-object songs)))
+                     (setf *playing-song* chosen-song)
+                     (song-url chosen-song))
                    (progn
-                     (first song-urls)
-                     (setf song-urls (rest song-urls)))))
+                     (let ((chosen-song (first songs)))
+                       (setf songs (rest songs))
+                       (setf *playing-song* chosen-song)
+                       (song-url chosen-song)))))
     (setf *playing-thread*
           (make-thread
            (lambda ()
@@ -149,11 +155,14 @@ new songs if buffer too small.")
                (loop (condition-wait *playlist-check-update* *playlist-lock*)
                      (unless (enough-songs-in-playlist?)
                        (if *shuffle-play*
-                           (append-to-playlist
-                            (random-object song-urls))
-                           (progn
-                             (append-to-playlist (first song-urls))
-                             (setf song-urls (rest song-urls))))))))))
+                           (let ((chosen-song (random-object songs)))
+                             (setf *playing-song* chosen-song)
+                             (append-to-playlist
+                              (song-url chosen-song)))
+                           (let ((chosen-song (first songs)))
+                             (setf songs (rest songs))
+                             (setf *playing-song* chosen-song)
+                             (append-to-playlist (song-url chosen-song))))))))))
     (start-timeout-checking)))
 
 (defun play (what)

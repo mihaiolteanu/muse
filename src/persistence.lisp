@@ -110,7 +110,7 @@ web, save to db and retry."
     (let ((artists (artists-with-tag genre)))        
         (when artists ;Only continue if genre actually exists in the wild.
           (insert-genre-artists genre artists)
-          (genre-artists genre)))))
+          (all-genre-artists genre)))))
 
 (defun all-genre-songs (genre)
   (let ((artists (db-genre-artists genre)))

@@ -58,7 +58,7 @@
            next-song
            previous-song
            play-pause
-           kill-player
+           quit-mpv
            seek
            quit))
 

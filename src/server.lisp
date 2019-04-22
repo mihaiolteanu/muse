@@ -75,7 +75,8 @@ evey song on the page, since that info can be inferred."
   `(dolist (album ,albums)
      (let ((name (album-name album)))
        (htm (:a :class "album"
-                :href (format nil "/artist/~a/album/~a" (url-name artist) (url-name name))
+                :href (format nil "/artist/~a/album/~a"
+                              (url-name artist-name) (url-name name))
                 (str name))))))
 
 (defmacro standard-page (&body body)
@@ -113,7 +114,7 @@ evey song on the page, since that info can be inferred."
 (defun s-artists ()
   (standard-page
     (:h2 "Available Artists")
-    (display-artists (artists))))
+    (display-artists (all-artists))))
 
 (defun s-tags ()
   (standard-page
@@ -124,19 +125,21 @@ evey song on the page, since that info can be inferred."
   (let ((tag (tag-from-uri)))
     (standard-page
       (:h2 (str (format nil "Artists with the ~a tag" tag)))
-      (display-artists (genre-artists tag)))))
+      (display-artists (all-genre-artists tag)))))
 
 (defun s-artist-info ()
-  (let ((artist (artist-from-uri)))
+  (let* ((artist-name (artist-from-uri))
+         (artist (artist-from-db artist-name)))
     (standard-page
-      (:h2 (str artist))
-      (display-tags (genres artist))
+      (:h2 (str (artist-name artist)))
+      (display-tags (artist-genres artist))
       (:h2 (str "similar artists"))
-      (display-similar (similar artist))
+      (display-similar (artist-similar artist))
       (:h2 (str "albums"))
-      (display-albums (albums artist))
+      (display-albums (artist-albums artist))
       (:h2 (str "songs"))
-      (display-songs (songs artist)))))
+      (display-songs (artist-songs artist))
+      )))
 
 (defun s-artist-album ()
   (multiple-value-bind (artist album)
@@ -188,7 +191,7 @@ evey song on the page, since that info can be inferred."
 (defun s-stop ()
   (when (playing?)
     (setf *play-pause-button* *play-button*)
-    (kill-player))
+    (quit-mpv))
   (redirect-to-source))
 
 (defun s-continue-with-video ()
