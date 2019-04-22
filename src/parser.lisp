@@ -48,6 +48,8 @@
 (defun parse-html (template &rest components)
   "Given an url template and some url components,
  build the actual url and return a parsed object."
+  (when (not (null (search "http" template)))
+    (setf components (mapcar #'urlencode components)))
   (let* ((url (eval `(format nil ,template ,@components)))
          (request (if (not (null (search "http" url)))
                       (handler-case (get url) ; Handle http requests

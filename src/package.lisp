@@ -25,6 +25,7 @@
   (:import-from :asdf :system-relative-pathname)
   (:import-from :alexandria :lastcar)
   (:import-from :cl-utilities :split-sequence)
+  (:import-from :do-urlencode :urlencode)
   (:shadowing-import-from :dexador :get)
   (:shadowing-import-from :dexador :delete)
   (:export new-artist
