@@ -1,59 +1,192 @@
 (in-package :player)
 
-(defvar *mpvsocket* "/tmp/muse_mpv_socket")
+(defvar *mpvsocket* "/tmp/mpvsocket")
 (defparameter *playing-thread* '())
+(defparameter *timeout-checking-thread* '())
+(defparameter *playing-list* '())
+(defparameter *shuffle-play* nil
+  "If true, the next song is chosen at random.")
+(defconstant +playlist-buffer+ 2
+  "Number of songs availalble in the playlist after the current one")
+(defconstant +buffer-check-timeout+ 15
+  "Number of seconds before checking the playlist buffer and adding
+new songs if buffer too small.")
+(defparameter *previous-song* '())
 (defparameter *playing-song* '())
 
-(defun send-mpv-command (&rest args)
-  (uiop:run-program
-   (format nil "echo '{\"command\": [~{\"~a\"~^, ~}]}' | socat - ~A" args *mpvsocket*)))
+;; (defun mpv-command (&rest args)
+;;   "Send an mpv command to the file socket, returning the response data
+;; and error code as values."
+;;   (with-decoder-simple-clos-semantics
+;;     (let* ((raw-response
+;;              (with-output-to-string (out)
+;;                (uiop:run-program
+;;                 (format nil "echo '{\"command\": [~{\"~a\"~^, ~}]}' | socat - ~A"
+;;                         args *mpvsocket*)
+;;                 :output out)))
+;;            (*json-symbols-package* nil)
+;;            (response (decode-json-from-string raw-response)))
+;;       ;; Setting an mpv property does not return a data; only return
+;;       ;; the response status in that case (success/error)
+;;       (handler-case
+;;           (with-slots (data error) response
+;;             (values data error))
+;;         (unbound-slot () (slot-value response 'error))))))
+
+(defun mpv-command (&rest args)
+  (parse
+   (with-output-to-string (out)
+     (uiop:run-program
+      (format nil "echo '{\"command\": [~{\"~a\"~^, ~}]}' | socat - ~A"
+              args *mpvsocket*)
+      :output out))))
 
 (defun set-mpv-property (property value)
-  (send-mpv-command "set_property" property value))
+  (mpv-command "set_property" property value))
 
-(defun quit ()
-  (send-mpv-command "quit" 0))
-
-(defun go-to-song-beginning ()
-  "Set the playtime to 0:00 for the current running song.
-Useful to use before quiting, since we're using the save-position-on-quit,
-but we don't want that to happend when the command is next-song, for example "
-  (set-mpv-property "percent-pos" "0"))
-
-(defun continue-with-video ()
-  "Continue from the point of where this song is, but with video support."
-  (interrupt-thread
-   *playing-thread*
-   (lambda ()
-     ;; save-position-on-quit also saves the --vid=no property
-     (set-mpv-property "vid" "yes")
-     (quit)
-     (play-url (song-url *playing-song*) :video T))))
-
-(defun previous-song ()
-  (go-to-song-beginning)
-  ;; to be done
-  )
-
-(defun next-song ()
-  ;; We don't want the next play of this song to start from the middle of the song
-  (go-to-song-beginning)
-  (quit))
+(defun get-mpv-property (property)
+  (gethash "data" (mpv-command "get_property" property)))
 
 (defun play-pause ()
-  (send-mpv-command "cycle" "pause"))
+  "Toggle playing status"
+  (mpv-command "cycle" "pause"))
+(defun pause ()
+  "Make sure the player is paused"
+  (unless (get-mpv-property "pause")
+    (play-pause)))
+(defun next-song ()
+  (mpv-command "playlist-next"))
 
-(defun seek (seconds)
-  (send-mpv-command `("seek" ,seconds)))
+(defun prev-song ()
+  (mpv-command "playlist-prev"))
 
-(defun play-songs (lst)
-  (print lst)
+(defun replay-song ()
+  (set-mpv-property "percent-pos" 0))
+
+(defun forward-song (seconds)
+  (mpv-command "seek" seconds))
+(defun playlist-position ()
+  (get-mpv-property "playlist-pos"))
+
+(defun playlist-count ()
+  (get-mpv-property "playlist-count"))
+
+(defun enough-songs-in-playlist? ()
+  (handler-case
+      (> (- (playlist-count) (playlist-position))
+         +playlist-buffer+)
+    (subprocess-error ()                ;Maybe mpv has not started yet
+      nil)))
+
+(defun song-position ()
+  (get-mpv-property "time-pos"))
+
+(defun playlist-urls ()
+  (map 'list
+       (lambda (e)
+         (gethash "filename" e))
+       (get-mpv-property "playlist")))
+
+(defun playing-song-url ()
+  (nth (playlist-position)
+       (playlist-urls)))
+
+(defun append-to-playlist (url)
+  (mpv-command "loadfile" url "append"))
+
+(defun open-playing-song-in-browser ()
+  (run-program `("xdg-open" ,(playing-song-url)))
+  (pause))
+
+(defun start-mpv (&rest urls)
+  (launch-program
+   (format nil
+           "mpv -ytdl-format=best --vid=no --input-ipc-server=~a ~{~a ~}"
+           *mpvsocket* urls)))
+
+(defun quit-mpv ()
+  (mpv-command "quit" 0)
+  (destroy-thread *timeout-checking-thread*)
+  (destroy-thread *playing-thread*))
+
+(defun remove-nil-urls (songs)
+  (remove-if (lambda (song)
+               (null (song-url song)))
+             songs))
+
+(defparameter *playlist-lock* (make-lock))
+(defparameter *playlist-check-update* (make-condition-variable))
+
+(defun start-timeout-checking ()
+  (setf *timeout-checking-thread*
+        (make-thread
+         (lambda ()
+           (loop (sleep +buffer-check-timeout+)
+                 (condition-notify *playlist-check-update*))))))
+
+(defun random-object (objs)
+  (nth (random (length objs))
+       objs))
+
+(defun play-single-artist (artist)
+  (play-songs (artist-songs artist)))
+
+(defun play-artist-album (artist album)
+  (play-songs
+   (album-songs
+    (find album (artist-albums artist)
+          :key #'album-name
+          :test #'string-equal))))
+
+(defun play-artists (artists)
+  (let* ((random-artist (artist-from-db (random-object artists)))
+         (random-song (random-object (artist-songs random-artist))))
+    (start-mpv (song-url random-song)))
   (setf *playing-thread*
         (make-thread
          (lambda ()
-           (loop for song in lst
-                 do (setf *playing-song* song)
-                    (play-song song))))))
+           (with-lock-held (*playlist-lock*)
+             (loop (condition-wait *playlist-check-update* *playlist-lock*)
+                   (unless (enough-songs-in-playlist?)
+                     (let* ((random-artist (artist-from-db (random-object artists)))
+                            (random-song (random-object (artist-songs random-artist))))
+                       (append-to-playlist (song-url random-song)))))))))
+  (start-timeout-checking))
+
+(defun play-songs (songs)
+  (let ((song-urls (mapcar #'song-url
+                            (remove-nil-urls songs))))
+    (start-mpv (if *shuffle-play*
+                   (random-object song-urls)
+                   (progn
+                     (first song-urls)
+                     (setf song-urls (rest song-urls)))))
+    (setf *playing-thread*
+          (make-thread
+           (lambda ()
+             (with-lock-held (*playlist-lock*)
+               (loop (condition-wait *playlist-check-update* *playlist-lock*)
+                     (unless (enough-songs-in-playlist?)
+                       (if *shuffle-play*
+                           (append-to-playlist
+                            (random-object song-urls))
+                           (progn
+                             (append-to-playlist (first song-urls))
+                             (setf song-urls (rest song-urls))))))))))
+    (start-timeout-checking)))
+
+(defun play (what)
+  (trivia:match what
+    ((list "artist" artist)
+     (play-single-artist (artist-from-db artist)))
+    ((list "similar" artist)
+     (play-artists (artist-similar (artist-from-db artist))))
+    ((list "tag" tag)
+     (play-artists (all-genre-artists tag)))
+    ((list "artist" artist "album" album)
+     (play-artist-album (artist-from-db artist) album))))
+
+(all-genre-artists "rock")
 
 (defun playing? ()
   (when *playing-thread*
@@ -62,28 +195,23 @@ but we don't want that to happend when the command is next-song, for example "
 (defun what-is-playing ()
   *playing-song*)
 
-(defun play-song (song)
-  (declare (song song))
-  (play-url (song-url song)))
+(defun playground ()
+  (start-mpv "https://www.youtube.com/watch?v=NmyWeOvF_Sg"
+             "https://www.youtube.com/watch?v=XFo332Y5uIA")
 
-(defun play-url (url &key (video nil))
-  "Open the given url with mpv with audio only, by default or with video
-if video is specified as T "
-  (handler-case
-      (run-program
-       (if video
-           (format nil "mpv --save-position-on-quit --input-ipc-server=~a ~A"
-                   *mpvsocket* url)
-           (format nil "mpv --save-position-on-quit --vid=no --input-ipc-server=~a ~A"
-                   *mpvsocket* url)))
-    (subprocess-error ()
-      ;; The link might not be valid or video is "not available in your location"
-      ;; Might try to find another link on youtube in the future, and save it in db.
-      (format nil "~a is not good~%" url))))
-
-(defun kill-player()
-  "Prevents reopening the player with a new song from list"
-  (when (playing?)
-    (destroy-thread *playing-thread*)
-    (go-to-song-beginning)
-    (quit)))
+  (quit-mpv)
+  (playlist-count)
+  (playlist-position)
+  (enough-songs-in-playlist?)
+  (append-to-playlist "https://www.youtube.com/watch?v=NmyWeOvF_Sg")
+  (prev-song)
+  (next-song)
+  (prev-song)
+  (play-pause)
+  (pause)
+  (open-playing-song-in-browser)
+  (playing-song-url)
+  (setf *shuffle-play* t)
+  (play '("artist" "Queen"))
+  (play '("artist" "Queen" "album" "Jazz"))
+  )

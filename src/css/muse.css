@@ -26,6 +26,14 @@ a.tag {
     margin: 10px;
 }
 
+a.similar {
+    margin: 20px;
+}
+
+a.album {
+    margin: 10px;
+}
+
 h2 { text-align: center }
 body { text-align: center }
 

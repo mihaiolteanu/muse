@@ -21,19 +21,52 @@
    (name     :initarg :name     :accessor song-name)
    (duration :initarg :duration :accessor song-duration)
    (url      :initarg :url      :accessor song-url    :initform nil)
-   (lyrics   :initarg :lyrics   :accessor song-lyrics :initform nil)))
+   (lyrics   :initarg :lyrics   :accessor song-lyrics :initform nil)
+   (likeness :initarg :likeness :accessor song-likeness :initform 0)))
 
 (defclass album ()
   ((name  :initarg :name  :accessor album-name)
    (year  :initarg :year  :accessor album-year :initform 0 )
    (songs :initarg :songs :accessor album-songs)))
 
+(defun artist-songs (artist)
+  (apply #'append
+         (mapcar (lambda (album)
+                   (album-songs album))
+                 (artist-albums artist))))
+
+(defun make-artist (name &key genres similar albums)
+  (make-instance 'artist
+                 :name name
+                 :genres genres
+                 :similar similar
+                 :albums albums))
+
+(defun make-genre (name)
+  (make-instance 'genre
+                 :name name))
+
+(defun make-song (artist name duration url &key lyrics likeness)
+  (make-instance 'song
+                 :artist artist
+                 :name name
+                 :duration duration
+                 :url url
+                 :lyrics lyrics
+                 :likeness likeness))
+
+(defun make-album (name year songs)
+  (make-instance 'album
+                 :name name
+                 :year year
+                 :songs songs))
+
 (defmethod print-object ((obj artist) stream)
   (print-unreadable-object (obj stream :type nil)
     (format stream "Artist: ~A~% Genres: ~A~% Similar: ~A~% ~{~A~%~}"
             (artist-name obj)
             (format nil "~{~A~^, ~}" (mapcar #'genre-name (artist-genres obj)))
-            (format nil "~{~A~^, ~}" (map 'list #'identity (artist-similar obj)))
+            (format nil "~{~A~^, ~}" (map 'list #'artist-name (artist-similar obj)))
             (artist-albums obj))))
 
 (defmethod print-object ((obj genre) stream)

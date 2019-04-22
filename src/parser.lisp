@@ -75,7 +75,7 @@
                  (attribute node "data-track-name")
                  (attribute node "href")))))))
 
-(defun album-info (artist album)
+(defun raw-album-info (artist album)
   (let* ((node (parse-html (album-page artist album)))
          (release-date ($ node "ul.metadata-list p.metadata-display" (text)))
          (tracks ($ node "section#tracks-section tr"
@@ -99,7 +99,7 @@
      ($ main-node "section div ol a.link-block-target" ;; Build a list of tracks for each of the albums
        (map (lambda (node) 
               (append (list (text node)) ;album name
-                      (album-info artist (text node)))))))))
+                      (raw-album-info artist (text node)))))))))
 
 (defmacro with-local-htmls (&body body)
   "Use local, pre-saved and original last.fm html pages to make requests.
@@ -116,39 +116,31 @@ Useful for testing the parser or playing around."
      (setf *artist-page* original-artist-page
            *album-page* original-album-page
            *artist-similar* original-artist-similar
-           *tag-artists* original-tag-artists)
-))
+           *tag-artists* original-tag-artists)))
 
-(defun new-songs (raw artist)
+(defun new-songs (raw-songs artist-name)
   "Create a list of song objects from raw parsed data"
   (map 'list (lambda (song)
-               (make-instance 'song
-                :artist   artist
-                :name     (first song)
-                :duration (second song)
-                :url      (third song)))
-       raw))
+               (make-song artist-name (first song) (second song) (third song)))
+       raw-songs))
 
-(defun new-albums (raw artist)
+(defun new-albums (raw-albums artist-name)
   (map 'list (lambda (album)
-               (make-instance 'album
-                :name  (first album)
-                :year  (second album)
-                :songs (new-songs (third album) artist)))
-       raw))
+               (make-album (first album) (second album)
+                           (new-songs (third album) artist-name)))
+       raw-albums))
 
-(defun new-artist (artist)
-  (let ((bio (biography artist)))
-    (make-instance
-     'artist
-     :name (clean-name artist)
-     :genres (map 'list (lambda (g)
-                          (make-instance 'genre :name g))
-                  (second bio))
-     :similar (first bio)
-     :albums (new-albums (third bio) (clean-name artist)))))
+(defun new-artist (artist-name)
+  (let* ((artist-name (clean-name artist-name))
+         (bio (biography artist-name)))
+    (make-artist artist-name
+                 :genres (map 'list (lambda (genre-name)
+                                      (make-genre genre-name))
+                              (second bio))
+                 :similar (first bio)
+                 :albums (new-albums (third bio) artist-name))))
 
-(defun tag-artists (tag)
+(defun artists-with-tag (tag)
   "Get a list of artists with the tag genre from the first 3 pages."
   (apply #'append
          (mapcar (lambda (page)

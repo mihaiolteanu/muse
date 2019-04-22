@@ -1,133 +1,155 @@
 (in-package :persistence)
 
 (defparameter *db*
-  (connect (merge-pathnames "music.db" (asdf:system-relative-pathname :muse ""))))
+  (connect
+   (merge-pathnames "music.db"
+                    (asdf:system-relative-pathname :muse ""))))
 
 (defun last-insert-rowid ()
   (execute-single *db* "SELECT last_insert_rowid()"))
 
-(defun retrieve (what from-where condition)
+(defun db-get (what from-where condition)
   (execute-to-list *db*
-   (format nil "SELECT ~a FROM ~a WHERE ~a"
-           what from-where condition)))
+                   (format nil "SELECT ~a FROM ~a WHERE ~a"
+                           what from-where condition)))
 
-(defun available-p (artist)
-  (let ((available
-          (retrieve "available" "artist"
-                    (format nil "name=\"~a\"" artist))))
-    (when available
-      (= (first (first available)) 1))))
+(defun db-artist-available (artist)
+  (if-let ((available
+            (db-get "available" "artist" (format nil "name=\"~a\"" artist))))
+    (first (first available))
+    nil))
 
-(defun artists ()
+(defun db-all-artists ()
+  "Only return artists which have full info available (songs, albums, etc.)"
+  (db-get "*" "artist" "available=1"))
+
+(defun db-all-songs ()
+  (db-get "*" "all_songs" 1))
+
+(defun db-all-artist-songs (artist)
+  (db-get "*" "all_songs" (format nil "artist=\"~a\"" artist)))
+
+(defun db-artist-albums (artist)
+  (db-get "*" "artist_albums_view"
+          (format nil "artist=\"~a\"" artist)))
+
+(defun db-song-id-from-album-id (album-id)
+  (mapcar #'first
+          (db-get "song_id" "album_songs"
+                  (format nil "album_id=~a" album-id))))
+
+(defun db-song-from-song-id (song-id)
+  (first (db-get "*" "song"
+                 (format nil "id=~a" song-id))))
+
+(defun db-artist-genres (artist)
+  (mapcar #'first
+          (db-get "genre" "artist_genres"
+                  (format nil "artist=\"~a\"" artist))))
+
+(defun db-all-genres ()
+  (mapcar #'first
+          (db-get "*" "genre" 1)))
+(defun db-genre-artists (genre)
+  (mapcar #'first
+          (db-get "artist" "genre_artists"
+                  (format nil "genre=\"~a\"" genre))))
+
+(defun db-similar-artists (artist)
+  (mapcar #'first
+          (db-get "similar" "artist_similar"
+                  (format nil "artist=\"~a\"" artist))))
+
+(defun artist-available? (artist)
+  (if-let ((available (db-artist-available artist)))
+    (= available 1)
+    nil))
+
+(defun all-artists ()
   (mapcar (lambda (a)
-            (make-instance
-             'artist
-             :name (first a)))
-          (retrieve "*" "artist" "available=1")))
+            (make-artist (first a)))
+          (db-all-artists)))
 
-(defun songs (artist)
-  "Retrieve all songs for the given artist from the db. If artist is not in the db,
-download the artist from the web and save it in the db."
-  (let ((artist (clean-name artist)))
-    (if (available-p artist)
-        (let ((raw-songs
-                (retrieve "*" "all_songs"
-                          (format nil "artist=\"~a\"" artist))))
-          (mapcar (lambda (song)
-                    (make-instance 'song
-                     :artist   (clean-name artist)
-                     :name     (third song)
-                     :duration (fifth song)
-                     :url      (fourth song)))
-                  raw-songs))
-        (progn
-          (insert-artist (new-artist artist))
-          ;; Retry now, after retrieving and saving to db.
-          (songs artist)))))
+(defun artist-songs-from-db (artist)
+  "Get all artist songs from db. If artist not in db, get it from web,
+save it to db and try again."
+  (if (artist-available? artist)
+      (mapcar (lambda (song)
+                (make-song artist (third song) (fifth song) (fourth song)))
+              (db-all-artist-songs artist))
+      (progn
+        (insert-artist (new-artist artist))
+        (artist-songs-from-db artist)))) 
 
 (defun all-songs ()
-  "Retrieve all available songs from the db as a list of song objects"
-  (mapcar (lambda (s)
-            (make-instance 'song
-                         :artist (first s)
-                         :name (third s)
-                         :url (fourth s)
-                         :duration (fifth s)))
-          (retrieve "*" "all_songs" 1)))
+  "All available songs from db."
+  (mapcar (lambda (song)
+            (make-song (first song) (third song) (fifth song) (fourth song)))
+          (db-all-songs)))
 
-(defun album-songs-from-id (id artist)
+(defun album-songs-from-album-id (album-id artist)
   (mapcar (lambda (song-id)
-            (let* ((raw-song-list
-                    (retrieve "*" "song"
-                              (format nil "id=~a" (first song-id))))
-                   (raw-song (first raw-song-list)))
-              (make-instance 'song
-                             :artist artist
-                             :name (second raw-song)
-                             :duration (third raw-song)
-                             :url (fourth raw-song))))
-          ;; Get all songs ids from this album id
-          (retrieve "song_id" "album_songs"
-                    (format nil "album_id=~a" id))))
-
-(defun albums (artist)
-  (mapcar (lambda (a)
-            (make-instance 'album
-                           :name (third a)
-                           :year (fourth a)
-                           :songs (album-songs-from-id (first a) artist)))
-          (retrieve "*" "artist_albums_view"
-                    (format nil "artist=\"~a\"" artist))))
-
-(defun genres (artist)
-  (mapcar (lambda (g)
-            (make-instance 'genre
-                           :name (first g)))
-          (retrieve "genre" "artist_genres"
-                    (format nil "artist=\"~a\"" artist))))
+            (let ((raw-song (db-song-from-song-id song-id)))
+              (make-song artist (second raw-song)
+                         (third raw-song) (fourth raw-song))))
+          (db-song-id-from-album-id album-id)))
 
 (defun all-genres ()
-  (mapcar (lambda (g)
-            (make-instance 'genre
-                           :name (first g)))
-          (retrieve "*" "genre" 1)))
+  (mapcar (lambda (genre-name)
+  
+            (make-genre genre-name))
+          (db-all-genres)))
 
-(defun genre-artists (genre)
-    "Return the artists for the given genre from the db. If not found
-in db, fetch from web, save to db and retry."
-  (let ((artists (retrieve "artist" "genre_artists"
-                           (format nil "genre=\"~a\"" genre))))
-    (if artists
-        (mapcar (lambda (a)
-                  (make-instance 'artist :name (first a)))
-                artists)
-        (progn
-          (let ((artists (tag-artists genre)))
-            ;; Only continue if genre actually exists
-            (when artists
-              (insert-genre-artists genre artists)
-              ;; Try again
-              (genre-artists genre)))))))
+(defun all-genre-artists (genre)
+  "All artists from the given genre. If not found in db, fetch from
+web, save to db and retry."
+  (if-let ((artists (db-genre-artists genre)))
+    (mapcar (lambda (artist)
+              (make-artist artist))
+            artists)
+    (let ((artists (artists-with-tag genre)))        
+        (when artists ;Only continue if genre actually exists in the wild.
+          (insert-genre-artists genre artists)
+          (genre-artists genre)))))
 
 (defun all-genre-songs (genre)
-  (let ((artists (retrieve "artist" "artist_genres"
-                           (format nil "genre=\"~a\"" genre))))
+  (let ((artists (db-genre-artists genre)))
     (apply #'append
-           (mapcar (lambda (a)
-                     (songs (first a)))
-                   artists))))
+           (mapcar #'artist-songs-from-db artists))))
 
-(defun similar (artist)
-  (mapcar (lambda (a)
-              (make-instance 'artist
-                             :name (first a)))
-          (retrieve "similar" "artist_similar"
-                    (format nil "artist=\"~a\"" artist))))
+(defun artist-albums-from-db (artist)
+  (mapcar (lambda (album)
+            (make-album (third album) (fourth album)
+                        (album-songs-from-album-id (first album) artist)))
+          (db-artist-albums artist)))
+
+(defun artist-genres-from-db (artist)
+  (mapcar (lambda (genre-name)
+            (make-genre genre-name))
+          (db-artist-genres artist)))
+
+(defun artist-similar-from-db (artist)
+  "Only adds similar artist names, but not their songs "
+  (mapcar (lambda (name)
+            (make-artist name))
+          (db-similar-artists artist)))
+
+(defun artist-from-db (artist)
+  "Complete artist object from db (albums, songs, similar, tags).
+If artist doesn't exist, go fetch it, add it to db and retry."
+  (if (artist-available? artist)
+      (make-artist artist
+               :genres (artist-genres-from-db artist)
+               :similar (artist-similar-from-db artist)
+               :albums (artist-albums-from-db artist))
+      (progn
+        (insert-artist (new-artist artist))
+        (artist-from-db artist))))
 
 ;; Insert into db
 (defun execute (template &rest values)
   (execute-non-query *db*
-   (apply #'format `(nil ,template ,@values))))
+                     (apply #'format `(nil ,template ,@values))))
 
 (defun insert-album (artist album)
   (execute "INSERT INTO album(name,release_date) VALUES(\"~a\", ~a)"
@@ -161,7 +183,7 @@ in db, fetch from web, save to db and retry."
 (defun insert-genres-assoc (artist genres)
   (declare (type (simple-array character) artist))
   (execute "INSERT INTO artist_genres(artist,genre) VALUES~{(~{\"~A\"~^,~})~^,~}"
-              (mapcar (lambda (a)
+           (mapcar (lambda (a)
                      (list artist (genre-name a)))
                    genres)))
 
@@ -173,7 +195,6 @@ in db, fetch from web, save to db and retry."
                    artists)))
 
 (defun insert-artist (artist)
-  (declare (artist artist))
   (let ((name (artist-name artist)))
     (insert-artist-name name 1)
     (insert-similar name (map 'list #'identity (artist-similar artist)))

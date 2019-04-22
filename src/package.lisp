@@ -1,19 +1,20 @@
 (defpackage :objects
   (:use :cl)
-  (:export artist
+  (:export make-artist
            artist-name
            artist-genres
            artist-similar
            artist-albums
-           genre
+           artist-songs
+           make-genre
            genre-name
-           song
+           make-song
            song-artist-name
            song-name
            song-duration
            song-url
            song-lyrics
-           album
+           make-album
            album-name
            album-year
            album-songs))
@@ -27,7 +28,7 @@
   (:shadowing-import-from :dexador :get)
   (:shadowing-import-from :dexador :delete)
   (:export new-artist
-           tag-artists
+           artists-with-tag
            with-local-htmls
            parse-html
            url-name
@@ -35,21 +36,22 @@
 
 (defpackage :persistence
   (:use :cl :sqlite :objects :parser)
-  (:export artists
-           songs
+  (:import-from :alexandria :if-let)
+  (:export all-artists
            all-songs
-           albums
-           genres
            all-genres
            all-genre-songs
-           genre-artists
-           similar
+           all-genre-artists
+           artist-from-db
            insert-artist
            with-test-db))
 
 (defpackage :player
-  (:use :cl :objects :uiop :bt)
-  (:export play-songs
+  (:use :cl :trivia :persistence :objects :uiop :bt)
+  (:import-from :alexandria :switch)
+  (:import-from :yason :parse)
+  (:export play
+           play-songs
            continue-with-video
            playing?
            what-is-playing
