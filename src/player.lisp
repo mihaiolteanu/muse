@@ -14,25 +14,6 @@ new songs if buffer too small.")
 (defparameter *previous-song* '())
 (defparameter *playing-song* '())
 
-;; (defun mpv-command (&rest args)
-;;   "Send an mpv command to the file socket, returning the response data
-;; and error code as values."
-;;   (with-decoder-simple-clos-semantics
-;;     (let* ((raw-response
-;;              (with-output-to-string (out)
-;;                (uiop:run-program
-;;                 (format nil "echo '{\"command\": [~{\"~a\"~^, ~}]}' | socat - ~A"
-;;                         args *mpvsocket*)
-;;                 :output out)))
-;;            (*json-symbols-package* nil)
-;;            (response (decode-json-from-string raw-response)))
-;;       ;; Setting an mpv property does not return a data; only return
-;;       ;; the response status in that case (success/error)
-;;       (handler-case
-;;           (with-slots (data error) response
-;;             (values data error))
-;;         (unbound-slot () (slot-value response 'error))))))
-
 (defun mpv-command (&rest args)
   (parse
    (with-output-to-string (out)
@@ -185,8 +166,6 @@ new songs if buffer too small.")
      (play-artists (all-genre-artists tag)))
     ((list "artist" artist "album" album)
      (play-artist-album (artist-from-db artist) album))))
-
-(all-genre-artists "rock")
 
 (defun playing? ()
   (when *playing-thread*
