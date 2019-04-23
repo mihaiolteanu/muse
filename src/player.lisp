@@ -3,7 +3,6 @@
 (defvar *mpvsocket* "/tmp/mpvsocket")
 (defparameter *playing-thread* '())
 (defparameter *timeout-checking-thread* '())
-(defparameter *playing-list* '())
 (defparameter *shuffle-play* nil
   "If true, the next song is chosen at random.")
 (defconstant +playlist-buffer+ 2
@@ -88,6 +87,7 @@ new songs if buffer too small.")
 
 (defun quit-mpv ()
   (mpv-command "quit" 0)
+  (setf *playing-songs* '())
   (destroy-thread *timeout-checking-thread*)
   (destroy-thread *playing-thread*))
 
