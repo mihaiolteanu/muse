@@ -59,6 +59,14 @@
     (when request
       (parse request))))
 
+(defun available-youtube-video? (url)
+  "Return true if the video is made available by its user."
+  (let* ((node (parse-html url))
+         (available-msg ($ node "div#unavailable-submessage.submessage" (text))))
+    (= (length (string-trim '(#\Space #\Tab #\Newline)
+                            (aref available-msg 0)))
+       0)))
+
 (defun album-page (artist album)
   "Given an artist name and an album name, return a url
  with info for such an artist and album"

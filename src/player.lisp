@@ -46,6 +46,7 @@ new songs if buffer too small.")
 
 (defun forward-song (seconds)
   (mpv-command "seek" seconds))
+
 (defun playlist-position ()
   (get-mpv-property "playlist-pos"))
 
@@ -82,7 +83,7 @@ new songs if buffer too small.")
 (defun start-mpv (&rest urls)
   (launch-program
    (format nil
-           "mpv -ytdl-format=best --vid=no --input-ipc-server=~a ~{~a ~}"
+           "mpv --log-file=/home/mihai/quicklisp/local-projects/muse/mpvlog --msg-level=all=trace -ytdl-format=best --vid=no --input-ipc-server=~a ~{~a ~}"
            *mpvsocket* urls)))
 
 (defun quit-mpv ()
@@ -208,10 +209,12 @@ with no further complications by the player."
 (defun playground ()
   (start-mpv "https://www.youtube.com/watch?v=NmyWeOvF_Sg"
              "https://www.youtube.com/watch?v=XFo332Y5uIA")
-
+  (what-is-playing)
   (quit-mpv)
   (playlist-count)
   (playlist-position)
+  (condition-notify *playlist-check-update*)
+  
   (enough-songs-in-playlist?)
   (append-to-playlist "https://www.youtube.com/watch?v=NmyWeOvF_Sg")
   (prev-song)
@@ -222,6 +225,7 @@ with no further complications by the player."
   (open-playing-song-in-browser)
   (playing-song-url)
   (setf *shuffle-play* t)
+  (play '("artist" "Aerosmith"))
   (play '("artist" "Queen"))
   (play '("artist" "Queen" "album" "Jazz"))
   )

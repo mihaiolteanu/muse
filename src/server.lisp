@@ -97,7 +97,8 @@ evey song on the page, since that info can be inferred."
            (:a :href (conc "/play-pause?source-uri=" (request-uri*))
                (str *play-pause-button*))
            (:a :href (conc "/next?source-uri=" (request-uri*)) "⏩")
-           (:a :href (conc "/toggle-shuffle?source-uri=" (request-uri*))
+           (:a :class "shuffle-status"
+               :href (conc "/toggle-shuffle?source-uri=" (request-uri*))
                (str *shuffle-status*)))
        (:p :class "menu-bar"
            (:a :href "/home" "home")
@@ -166,11 +167,10 @@ evey song on the page, since that info can be inferred."
     (when source-uri
       (redirect (url-name source-uri)))))
 
-(defun toggle-play-pause ()
+(defun toggle-play-pause-button ()
   (if (string= *play-pause-button* *play-button*)
       (setf *play-pause-button* *pause-button*)
-      (setf *play-pause-button* *play-button*))
-  (play-pause))
+      (setf *play-pause-button* *play-button*)))
 
 (defun split-play-parameter (param)
   ;; First element after splitting will be an empty string; skip it
@@ -179,9 +179,18 @@ evey song on the page, since that info can be inferred."
          :separator "/")))
 
 (defun s-play-pause ()
+  "If already playing, pause it and change the playing buttons state.
+If not, figure out what needs to be played and send it to the player
+as a list of strings. All play requests go to the same url which
+redirects to this function, with the parameter source-uri set to what
+needs to be played."
   (if (playing?)
-      (toggle-play-pause)
-      (play (split-play-parameter (get-parameter "source-uri")) *shuffle-play*))
+      (progn
+        (toggle-play-pause-button)
+        (play-pause))
+      (progn
+        (play (split-play-parameter (get-parameter "source-uri")) *shuffle-play*)
+        (toggle-play-pause-button)))
   (redirect-to-source))
 
 (defun s-previous ()

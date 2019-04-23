@@ -30,6 +30,7 @@
   (:shadowing-import-from :dexador :delete)
   (:export new-artist
            artists-with-tag
+           available-youtube-video?
            with-local-htmls
            parse-html
            url-name
@@ -48,16 +49,16 @@
            with-test-db))
 
 (defpackage :player
-  (:use :cl :trivia :persistence :objects :uiop :bt)
+  (:use :cl :trivia :parser :persistence :objects :uiop :bt)
   (:import-from :alexandria :switch)
   (:import-from :yason :parse)
   (:export play
            play-songs
-           continue-with-video
            playing?
            what-is-playing
+           open-playing-song-in-browser
            next-song
-           previous-song
+           prev-song
            play-pause
            quit-mpv
            seek

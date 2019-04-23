@@ -188,7 +188,11 @@ If artist doesn't exist, go fetch it, add it to db and retry."
                    genres)))
 
 (defun insert-similar (artist artists)
-  (execute "INSERT INTO artist(name) VALUES~{(\"~A\")~^,~}" artists)
+  (mapcar (lambda (a)
+            (unless (artist-available? a)
+              (insert-artist-name a 0)))
+          artists)
+  ;; (execute "INSERT INTO artist(name) VALUES~{(\"~A\")~^,~}" artists)
   (execute "INSERT INTO artist_similar(artist,similar) VALUES~{(~{\"~A\"~^,~})~^,~}"
            (mapcar (lambda (a)
                      (list artist a))
