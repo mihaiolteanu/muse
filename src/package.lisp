@@ -42,7 +42,6 @@
   (:export all-artists
            all-songs
            all-genres
-           all-genre-songs
            all-genre-artists
            artist-from-db
            insert-artist

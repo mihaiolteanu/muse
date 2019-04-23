@@ -112,11 +112,6 @@ web, save to db and retry."
           (insert-genre-artists genre artists)
           (all-genre-artists genre)))))
 
-(defun all-genre-songs (genre)
-  (let ((artists (db-genre-artists genre)))
-    (apply #'append
-           (mapcar #'artist-songs-from-db artists))))
-
 (defun artist-albums-from-db (artist)
   (mapcar (lambda (album)
             (make-album (third album) (fourth album)
