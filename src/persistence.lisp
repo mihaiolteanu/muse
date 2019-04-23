@@ -26,9 +26,6 @@
 (defun db-all-songs ()
   (db-get "*" "all_songs" 1))
 
-(defun db-all-artist-songs (artist)
-  (db-get "*" "all_songs" (format nil "artist=\"~a\"" artist)))
-
 (defun db-artist-albums (artist)
   (db-get "*" "artist_albums_view"
           (format nil "artist=\"~a\"" artist)))
@@ -69,17 +66,6 @@
   (mapcar (lambda (a)
             (make-artist (first a)))
           (db-all-artists)))
-
-(defun artist-songs-from-db (artist)
-  "Get all artist songs from db. If artist not in db, get it from web,
-save it to db and try again."
-  (if (artist-available? artist)
-      (mapcar (lambda (song)
-                (make-song artist (third song) (fifth song) (fourth song)))
-              (db-all-artist-songs artist))
-      (progn
-        (insert-artist (new-artist artist))
-        (artist-songs-from-db artist)))) 
 
 (defun all-songs ()
   "All available songs from db."
