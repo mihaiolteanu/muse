@@ -154,7 +154,7 @@ evey song on the page, since that info can be inferred."
     (setf album (clean-name album))
     (standard-page
       (:h2 (str (format nil "~a - ~a (album)" album artist)))
-      (let ((alb (find album (albums artist)
+      (let ((alb (find album (artist-albums artist)
                        :key #'album-name
                        :test #'string=)))
         (when alb
@@ -186,7 +186,7 @@ evey song on the page, since that info can be inferred."
 
 (defun s-previous ()
   (when (playing?)
-    (previous-song))
+    (prev-song))
   (redirect-to-source))
 
 (defun s-next ()
@@ -212,7 +212,7 @@ evey song on the page, since that info can be inferred."
 
 (defun s-continue-with-video ()
   (when (playing?)
-    (continue-with-video)))
+    (open-playing-song-in-browser)))
 
 (defparameter *base-directory*
   (make-pathname
@@ -222,10 +222,14 @@ evey song on the page, since that info can be inferred."
 
 (setq *dispatch-table*
       (nconc (list              
-              (create-regex-dispatcher "^/artist/[a-zA-Z0-9 ]+$" 's-artist-info)
+              (create-regex-dispatcher
+               "^/artist/[a-zA-Z0-9 ]+$" 's-artist-info)
               (create-regex-dispatcher
                "^/artist/[a-zA-Z0-9 ]+/album/[a-zA-Z0-9 ]+$" 's-artist-album)
-              (create-regex-dispatcher "^/tag/[a-zA-Z0-9 ]+$" 's-tag-artists)
+              (create-regex-dispatcher
+               "^/similar/[a-zA-Z0-9 ]+$" (lambda () (print "ignore")))
+              (create-regex-dispatcher
+               "^/tag/[a-zA-Z0-9 ]+$" 's-tag-artists)
               (create-folder-dispatcher-and-handler "/img/"
                (merge-pathnames (make-pathname :directory '(:relative "img"))
                                 *base-directory*))
