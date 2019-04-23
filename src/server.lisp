@@ -195,13 +195,17 @@ evey song on the page, since that info can be inferred."
   (redirect-to-source))
 
 (defun s-shuffle ()
-  (if *shuffle-play*
-      (progn
-        (setf *shuffle-play* nil)
-        (setf *shuffle-status* *shuffle-off*))
-      (progn
-        (setf *shuffle-play* T)
-        (setf *shuffle-status* *shuffle-on*)))
+  "Toggle the shuffle status, but only if player is not already started.
+Stop, change the shuffle status and restart the player if that's what
+you need."
+  (unless (playing?)
+    (if *shuffle-play*
+        (progn
+          (setf *shuffle-play* nil)
+          (setf *shuffle-status* *shuffle-off*))
+        (progn
+          (setf *shuffle-play* T)
+          (setf *shuffle-status* *shuffle-on*))))
   (redirect-to-source))
 
 (defun s-stop ()
