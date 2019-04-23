@@ -6,6 +6,10 @@
 (defparameter *pause-button* "⏸")
 (defparameter *play-button* "▶")
 (defparameter *play-pause-button* *play-button*)
+(defparameter *shuffle-play* nil)
+(defparameter *shuffle-off* "[ ]")
+(defparameter *shuffle-on*  "[s]")
+(defparameter *shuffle-status* *shuffle-off*)
 
 (defparameter *my-acceptor*
   (make-instance
@@ -92,7 +96,9 @@ evey song on the page, since that info can be inferred."
            (:a :href (conc "/previous?source-uri=" (request-uri*)) "⏪")
            (:a :href (conc "/play-pause?source-uri=" (request-uri*))
                (str *play-pause-button*))
-           (:a :href (conc "/next?source-uri=" (request-uri*)) "⏩"))
+           (:a :href (conc "/next?source-uri=" (request-uri*)) "⏩")
+           (:a :href (conc "/toggle-shuffle?source-uri=" (request-uri*))
+               (str *shuffle-status*)))
        (:p :class "menu-bar"
            (:a :href "/home" "home")
            (:a :href "/artists" "artists")
@@ -175,7 +181,7 @@ evey song on the page, since that info can be inferred."
 (defun s-play-pause ()
   (if (playing?)
       (toggle-play-pause)
-      (play (split-play-parameter (get-parameter "source-uri"))))
+      (play (split-play-parameter (get-parameter "source-uri")) *shuffle-play*))
   (redirect-to-source))
 
 (defun s-previous ()
@@ -186,6 +192,16 @@ evey song on the page, since that info can be inferred."
 (defun s-next ()
   (when (playing?)
     (next-song))
+  (redirect-to-source))
+
+(defun s-shuffle ()
+  (if *shuffle-play*
+      (progn
+        (setf *shuffle-play* nil)
+        (setf *shuffle-status* *shuffle-off*))
+      (progn
+        (setf *shuffle-play* T)
+        (setf *shuffle-status* *shuffle-on*)))
   (redirect-to-source))
 
 (defun s-stop ()
@@ -224,6 +240,7 @@ evey song on the page, since that info can be inferred."
                        ("/previous" s-previous)
                        ("/play-pause" s-play-pause)
                        ("/next" s-next)
+                       ("/toggle-shuffle" s-shuffle)
                        ("/artists" s-artists)
                        ("/tags" s-tags)
                        ("/genres" s-genres)))))

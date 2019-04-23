@@ -105,9 +105,21 @@ new songs if buffer too small.")
            (loop (sleep +buffer-check-timeout+)
                  (condition-notify *playlist-check-update*))))))
 
-(defun random-object (objs)
-  (nth (random (length objs))
-       objs))
+(defun random-playable-object (objs)
+  "Get a random entry from the objs list, making sure it can be used
+with no further complications by the player."
+  (labels ((nth-random ()
+             (nth (random (length objs))
+                  objs)))
+    (match (first objs)
+      ;; Go for a random artist
+      ((objects::artist)       
+       (nth-random))
+
+      ;; Only return a song object with playable url (not disable by the user, etc)
+      ((objects::song)
+       (do ((selected (nth-random) (nth-random)))
+           ((available-youtube-video? (song-url selected)) selected))))))
 
 (defun play-single-artist (artist)
   (play-songs (artist-songs artist)))
@@ -120,9 +132,9 @@ new songs if buffer too small.")
           :test #'string-equal))))
 
 (defun play-artists (artists)
-  (let* ((random-artist (artist-from-db (random-object artists)))
-         (random-song (random-object (artist-songs random-artist))))
-    (setf *playing-song* random-song)
+  (let* ((random-artist (artist-from-db (artist-name (random-playable-object artists))))
+         (random-song (random-playable-object (artist-songs random-artist))))
+    (setf *playing-songs* (append *playing-songs* (list random-song)))
     (start-mpv (song-url random-song)))
   (setf *playing-thread*
         (make-thread
@@ -130,28 +142,40 @@ new songs if buffer too small.")
            (with-lock-held (*playlist-lock*)
              (loop (condition-wait *playlist-check-update* *playlist-lock*)
                    (unless (enough-songs-in-playlist?)
-                     (let* ((random-artist (artist-from-db (random-object artists)))
-                            (random-song (random-object (artist-songs random-artist))))
-                       (setf *playing-song* random-song)
+                     (let* ((random-artist (artist-from-db
+                                            (artist-name (random-playable-object artists))))
+                            (random-song (random-playable-object (artist-songs random-artist))))
+                       (setf *playing-songs* (append *playing-songs* (list random-song)))
                        (append-to-playlist (song-url random-song)))))))))
   (start-timeout-checking))
+
+(defun first-playable-songs (songs)
+  "Returns a list where the first song is playable"
+  (do ((ret songs (rest ret)))
+      ((or (null ret)
+           (available-youtube-video? (song-url (first ret))))
+       ret)))
 
 (defmacro choose-song (song-url-action)
   "Choose a song based on shuffle, save it as the current playing song
  and then decide what to do with the chosen song's url (play it, return it, etc.)"
   `(if *shuffle-play*
-       (let ((chosen-song (random-object songs)))
+       (let ((chosen-song (random-playable-object songs)))
          (setf *playing-songs* (append *playing-songs* (list chosen-song)))
          (funcall ,song-url-action (song-url chosen-song)))
        (progn
-         (let ((chosen-song (first songs)))
-           (setf songs (rest songs))
+         (let* ((playable-songs (first-playable-songs songs))
+                (chosen-song (first playable-songs)))
+           (setf songs (rest playable-songs))
            (setf *playing-songs* (append *playing-songs* (list chosen-song)))
            (funcall ,song-url-action (song-url chosen-song))))))
 
-(defun play-songs (songs)
-  (let ((songs (remove-nil-urls songs)))
-    (start-mpv (choose-song #'identity))
+(defun play-songs (raw-songs)  
+  (let* ((songs (remove-nil-urls raw-songs))
+         (first-song (choose-song #'identity))
+         (second-song (choose-song #'identity))
+         (third-song (choose-song #'identity)))
+    (start-mpv first-song second-song third-song)
     (setf *playing-thread*
           (make-thread
            (lambda ()
@@ -161,7 +185,8 @@ new songs if buffer too small.")
                        (choose-song #'append-to-playlist)))))))
     (start-timeout-checking)))
 
-(defun play (what)
+(defun play (what shuffle-play)
+  (setf *shuffle-play* shuffle-play)
   (trivia:match what
     ((list "artist" artist)
      (play-single-artist (artist-from-db artist)))
