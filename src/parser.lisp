@@ -161,22 +161,36 @@ Useful for testing the parser or playing around."
                              'list)))
                  '(1 2 3))))
 
-;; (defvar *genius-lyrics-url* "https://genius.com/~A-lyrics")
-;; (defun genius-lyrics (artist-song)
-;;   (with-lqueryed-url *genius-lyrics-url* (artist-song)
-;;       "div.lyrics p"
-;;     (text)))
-;; (defvar *anathema-one-last-goodbye-lyrics* (genius-lyrics "anathema-one-last-goodbye"))
 
-;; (aref *anathema-one-last-goodbye-lyrics* 0)
+;;; Lyrics
+(defun site-lyrics (artist song url-template parse-param)
+  "Template for lyrics parsing."
+  (let* ((node (parse-html
+                (format nil url-template
+                        (substitute #\- #\Space artist)
+                        (substitute #\- #\Space song))))
+         (result ($ node parse-param (text))))
+    (unless (= (length result)
+               0)
+      (aref result 0))))
 
+(defun genius-lyrics (artist song)
+  (site-lyrics artist song
+               "https://genius.com/~a-~a-lyrics"
+               "div.lyrics p"))
 
-;; (defvar *genius-slow-mort*
-;;   (let* ((url "https://genius.com/Slow-mort-lyrics" )
-;;          (request (dex:get url))
-;;          (parsed (plump:parse request)))
-;;     parsed))
+(defun songlyrics (artist song)
+  (site-lyrics artist song
+               "http://www.songlyrics.com/~a/~a-lyrics/"
+               "p#songLyricsDiv"))
 
-;; (lquery:$ *genius-slow-mort* "[initial-content-for=\"song_body\"]" (text))
-;; (lquery:$ *genius-slow-mort* "div.lyrics p" (text))
+(defun musix-lyrics (artist song)
+  (site-lyrics artist song
+               "https://www.musixmatch.com/lyrics/~a/~a"
+               "span.lyrics__content__warning"))
 
+(defun song-lyrics-from-web (artist song)
+  "Get the lyrics from web for the given artist and song."
+  (or (genius-lyrics artist song)
+      (songlyrics artist song)
+      (musix-lyrics artist song)))

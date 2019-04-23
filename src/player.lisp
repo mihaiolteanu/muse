@@ -135,7 +135,14 @@ too much info from db at once. Instead, request it only when needed."
           :test #'string-equal))))
 
 (defun add-to-playing-list (songs)
+  "Now is the perfect time to also download and save the song lyrics
+to the db if they're not already there. "
   (mapcar (lambda (s)
+            (when (emptyp (song-lyrics s))
+              (if-let ((lyrics (song-lyrics-from-web (song-artist-name s)
+                                                     (song-name s))))
+                (save-song-lyrics lyrics (song-url s))
+                (setf (song-lyrics s) lyrics)))
             (setf *playing-songs*
                   (append *playing-songs* (list s))))
           songs))

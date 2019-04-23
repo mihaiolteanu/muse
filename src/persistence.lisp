@@ -77,7 +77,8 @@
   (mapcar (lambda (song-id)
             (let ((raw-song (db-song-from-song-id song-id)))
               (make-song artist (second raw-song)
-                         (third raw-song) (fourth raw-song))))
+                         (third raw-song) (fourth raw-song)
+                         :lyrics (fifth raw-song))))
           (db-song-id-from-album-id album-id)))
 
 (defun all-genres ()
@@ -192,6 +193,13 @@ If artist doesn't exist, go fetch it, add it to db and retry."
            (mapcar (lambda (a)
                      (list a genre))
                    artists)))
+
+(defun save-song-lyrics (lyrics song-url)
+  "song url should be unique and it's easier to find than the id
+based solely on the song name or song-name and artist."
+  (execute
+   (format nil "UPDATE song SET lyrics=\"~a\" WHERE url=\"~a\""
+           lyrics song-url)))
 
 ;; Delete from db
 (defun clean-db ()

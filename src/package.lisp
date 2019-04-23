@@ -31,6 +31,7 @@
   (:export new-artist
            artists-with-tag
            available-youtube-video?
+           song-lyrics-from-web
            with-local-htmls
            parse-html
            url-name
@@ -45,6 +46,7 @@
            all-genre-artists
            artist-from-db
            insert-artist
+           save-song-lyrics
            with-test-db))
 
 (defpackage :player

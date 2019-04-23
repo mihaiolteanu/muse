@@ -34,6 +34,10 @@ a.album {
     margin: 10px;
 }
 
+p.playing-song-lyrics {
+    white-space: pre;
+}
+
 h2 { text-align: center }
 body { text-align: center }
 
