@@ -90,11 +90,15 @@
          (release-date ($ node "ul.metadata-list p.metadata-display" (text)))
          (tracks ($ node "section#tracks-section tr"
                    (map (lambda (node)
-                          (concatenate 'list ;(song-title duration link)
-                                       ($ node "td.chartlist-name a.link-block-target" (text))
-                                       (map 'vector #'trim-whitespace
-                                            ($ node "td.chartlist-duration" (text)))
-                                       ($ node "td.chartlist-play a" (attr :href))))))))
+                          (concatenate
+                           'list ;(song-title duration link)
+                           ($ node "td.chartlist-name a.link-block-target" (text))
+                           (map 'vector #'trim-whitespace
+                                ($ node "td.chartlist-duration" (text)))
+                           (let ((url ($ node "td.chartlist-play a" (attr :href))))
+                             (if (equalp url #())
+                                 (list "n/a")  ;not all songs have a url
+                                 url))))))))
     (list (lastcar (split-sequence #\Space (aref release-date 0)))
           (remove-if #'null tracks))))
 
