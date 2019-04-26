@@ -186,11 +186,9 @@ playing list. Songs is defined in the calling function "
                 (first-song (first playable-songs)))
            (setf songs (rest playable-songs))
            (setf song first-song)))
-     (if ,startup
-         song
-         (add-songs-to-player nil song))))
+     song))
 
-(defun play-songs (raw-songs)  
+(defun play-songs (raw-songs)
   (let* ((songs (remove-nil-urls raw-songs))
          (song1 (choose-song :startup T))
          (song2 (choose-song :startup T))
@@ -202,7 +200,7 @@ playing list. Songs is defined in the calling function "
              (with-lock-held (*playlist-lock*)
                (loop (condition-wait *playlist-check-update* *playlist-lock*)
                      (unless (enough-songs-in-playlist?)
-                       (choose-song)))))))
+                       (add-songs-to-player nil (choose-song))))))))
     (start-timeout-checking)))
 
 (defun play (what shuffle-play)
