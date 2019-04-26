@@ -196,6 +196,19 @@ fetch them first and then return the results from the db"
                       "The Mars Volta" "King Crimson" "Rush"
                       "Led Zeppelin" "Yes" "Genesis")))))))
 
+(test player-called-with-correct-urls
+  (with-test-db
+    (with-local-htmls
+      (with-dynamic-stubs ((player::start-mpv nil)
+                           (player::append-to-playlist nil))
+        (play '("artist" "Pendragon") nil)
+        (is (equalp (nth-mock-args-for 1 'player::start-mpv)
+                    '("https://www.youtube.com/watch?v=ccr-VkEpE18"
+                      "https://www.youtube.com/watch?v=gHeWRLugWQA"
+                      "https://www.youtube.com/watch?v=42m2llb0w84")))
+        (when (player::thread-alive-p player::*playing-thread*)
+          (player::destroy-thread player::*playing-thread*))
+        (player::clear-calls)))))
 
 (setf 5am:*run-test-when-defined* T)
 
