@@ -70,7 +70,8 @@
 (defun all-songs ()
   "All available songs from db."
   (mapcar (lambda (song)
-            (make-song (first song) (third song) (fifth song) (fourth song)))
+            (make-song (first song) (third song) (fifth song) (fourth song)
+                       :lyrics (sixth song)))
           (db-all-songs)))
 
 (defun album-songs-from-album-id (album-id artist)
