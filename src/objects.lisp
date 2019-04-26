@@ -35,6 +35,16 @@
                    (album-songs album))
                  (artist-albums artist))))
 
+(defun same-songs (song1 song2)
+  (and (string-equal (song-artist-name song1)
+                     (song-artist-name song2))
+       (string-equal (song-name song1)
+                     (song-name song2))
+       (equal (song-duration song1)
+              (song-duration song2))
+       (equal (song-url song1)
+              (song-url song2))))
+
 (defun make-artist (name &key genres similar albums)
   (make-instance 'artist
                  :name name

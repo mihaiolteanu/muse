@@ -9,6 +9,7 @@
            make-genre
            genre-name
            make-song
+           same-songs
            song-artist-name
            song-name
            song-duration
