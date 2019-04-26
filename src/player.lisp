@@ -80,16 +80,25 @@ new songs if buffer too small.")
   (pause))
 
 (defun start-mpv (&rest urls)
-  (launch-program
-   (format nil
-           "mpv --log-file=/home/mihai/quicklisp/local-projects/muse/mpvlog --msg-level=all=trace -ytdl-format=best --vid=no --input-ipc-server=~a ~{~a ~}"
-           *mpvsocket* urls)))
+  (wait-process
+   (launch-program
+    (format nil
+            "mpv --log-file=/home/mihai/quicklisp/local-projects/muse/mpvlog --msg-level=all=trace -ytdl-format=best --vid=no --input-ipc-server=~a ~{~a ~}"
+            *mpvsocket* urls))))
 
 (defun quit-mpv ()
-  (mpv-command "quit" 0)
+  (mpv-command "quit" 0))
+
+(defun cleanup ()
   (setf *playing-songs* '())
-  (destroy-thread *timeout-checking-thread*)
-  (destroy-thread *playing-thread*))
+  (when (thread-alive-p *timeout-checking-thread*)
+    (destroy-thread *timeout-checking-thread*))
+  (when (thread-alive-p *playing-thread*)
+    (destroy-thread *playing-thread*)))
+
+(defun quit-mpv-and-cleanup ()
+  (quit-mpv)
+  (cleanup))
 
 (defun remove-nil-urls (songs)
   (remove-if (lambda (song)
