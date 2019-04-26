@@ -62,8 +62,7 @@
            prev-song
            play-pause
            quit-mpv
-           seek
-           quit))
+           seek))
 
 (defpackage :server
   (:use :cl :persistence :parser :objects :player :cl-who :hunchentoot))
