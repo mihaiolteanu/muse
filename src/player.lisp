@@ -93,7 +93,7 @@ new songs if buffer too small.")
 
 (defun remove-nil-urls (songs)
   (remove-if (lambda (song)
-               (null (song-url song)))
+               (string= (song-url song) "n/a"))
              songs))
 
 (defparameter *playlist-lock* (make-lock))
