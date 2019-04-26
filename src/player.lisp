@@ -89,11 +89,17 @@ new songs if buffer too small.")
   (mpv-command "quit" 0))
 
 (defun cleanup ()
+  "Prepare the playing list for the next session. Kill and wait all
+threads to go to waste."
   (setf *playing-songs* '())
   (when (thread-alive-p *timeout-checking-thread*)
     (destroy-thread *timeout-checking-thread*))
   (when (thread-alive-p *playing-thread*)
-    (destroy-thread *playing-thread*)))
+    (destroy-thread *playing-thread*))
+  (do ((t1 *timeout-checking-thread*)
+       (t2 *playing-thread*))
+      ((and (not (thread-alive-p t1))
+            (not (thread-alive-p t2))))))
 
 (defun quit-mpv-and-cleanup ()
   (quit-mpv)
