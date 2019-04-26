@@ -111,8 +111,9 @@ new songs if buffer too small.")
   (setf *timeout-checking-thread*
         (make-thread
          (lambda ()
-           (loop (sleep +buffer-check-timeout+)
-                 (condition-notify *playlist-check-update*))))))
+           (loop (sleep *buffer-check-timeout*)
+                 (condition-notify *playlist-check-update*)))
+         :name "mpv-timeout-checking")))
 
 (defun random-item (list)
   (nth (random (length list))
@@ -173,7 +174,8 @@ to the db if they're not already there. "
                    (unless (enough-songs-in-playlist?)
                      (let* ((artist (random-artist artists))
                             (song (random-song (artist-songs artist))))
-                       (add-songs-to-player nil song))))))))
+                       (add-songs-to-player nil song))))))
+         :name "mpv-playing-thread"))
   (start-timeout-checking))
 
 (defun first-playable-songs (songs)
@@ -208,7 +210,8 @@ playing list. Songs is defined in the calling function "
              (with-lock-held (*playlist-lock*)
                (loop (condition-wait *playlist-check-update* *playlist-lock*)
                      (unless (enough-songs-in-playlist?)
-                       (add-songs-to-player nil (choose-song))))))))
+                       (add-songs-to-player nil (choose-song))))))
+           :name "mpv-playing-thread"))
     (start-timeout-checking)))
 
 (defun play (what shuffle-play)
