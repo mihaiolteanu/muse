@@ -41,7 +41,7 @@
        (equal (mapcar #'song-url pure-album-songs)
               '("https://www.youtube.com/watch?v=ccr-VkEpE18"
                 "https://www.youtube.com/watch?v=gHeWRLugWQA"
-                NIL NIL NIL             ;No urls available for these songs
+                "n/a" "n/a" "n/a"             ;No urls available for these songs
                 "https://www.youtube.com/watch?v=42m2llb0w84"
                 "https://www.youtube.com/watch?v=3obNa5BE5MY")))
       (is-true
@@ -115,11 +115,11 @@
                        0 10)
                '("https://www.youtube.com/watch?v=ccr-VkEpE18"
                  "https://www.youtube.com/watch?v=gHeWRLugWQA"
-                 "NIL" "NIL" "NIL"
+                 "n/a" "n/a" "n/a"
                  "https://www.youtube.com/watch?v=42m2llb0w84"
                  "https://www.youtube.com/watch?v=3obNa5BE5MY"
                  "https://www.youtube.com/watch?v=V4BUn1YYWJE"
-                 "NIL" "NIL"))))))))
+                 "n/a" "n/a"))))))))
 
 (test new-artist-if-artist-not-in-db
   "Fetch the artist from web and save it in db if not already in db."
