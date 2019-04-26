@@ -210,7 +210,12 @@ playing list. Songs is defined in the calling function "
              (with-lock-held (*playlist-lock*)
                (loop (condition-wait *playlist-check-update* *playlist-lock*)
                      (unless (enough-songs-in-playlist?)
-                       (add-songs-to-player nil (choose-song))))))
+                       (let ((song (choose-song)))
+                         ;; Stop the thread if no more songs available to be played.
+                         (if song
+                             (add-songs-to-player nil song)
+                             (return nil)))
+                       ))))
            :name "mpv-playing-thread"))
     (start-timeout-checking)))
 
