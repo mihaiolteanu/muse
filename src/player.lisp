@@ -219,9 +219,14 @@ playing list. Songs is defined in the calling function "
   (when *playing-thread*
     (thread-alive-p *playing-thread*)))
 
-(defun what-is-playing ()
+(defun playing-song ()
   (nth (playlist-position)
        *playing-songs*))
+
+(defun playing-songs ()
+  "Songs currently in playlist, past, present and future.
+One of them is the currently playing song."
+  *playing-songs*)
 
 (defun playground ()
   (start-mpv "https://www.youtube.com/watch?v=NmyWeOvF_Sg"

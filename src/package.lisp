@@ -56,7 +56,8 @@
   (:export play
            play-songs
            playing?
-           what-is-playing
+           playing-song
+           playing-songs
            open-playing-song-in-browser
            next-song
            prev-song

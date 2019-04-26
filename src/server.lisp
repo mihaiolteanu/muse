@@ -114,9 +114,9 @@ evey song on the page, since that info can be inferred."
         (htm
          (:div :class "player-status" (str "playing"))
          (:p :class "playing-song"
-             (display-songs (list (what-is-playing)) :with-artist t))
+             (display-songs (list (playing-song)) :with-artist t))
          (:p :class "playing-song-lyrics"
-             (str (song-lyrics (what-is-playing)))))
+             (str (song-lyrics (playing-song)))))
         (htm
          (:div :class "player-status" (str "stopped"))))))
 
