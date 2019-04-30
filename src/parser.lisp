@@ -97,12 +97,14 @@
                                 ($ node "td.chartlist-duration" (text)))
                            (let ((url ($ node "td.chartlist-play a" (attr :href))))
                              (if (equalp url #())
-                                 (list "n/a")  ;not all songs have a url
+                                 (list "")  ;not all songs have a url
                                  url))))))))
     (list (lastcar (split-sequence #\Space (aref release-date 0)))
+          ;; Same string needed as above to clear entries which contain
+          ;; artist name but not a song name (?!). Hackish
           (remove-if (lambda (tr)
                        (or (null tr)
-                           (equalp tr '("n/a"))))
+                           (equalp tr '(""))))
                      tracks))))
 
 (defun biography (artist)
