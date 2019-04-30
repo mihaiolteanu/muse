@@ -26,13 +26,15 @@ new songs if buffer too small.")
 (defun get-mpv-property (property)
   (gethash "data" (mpv-command "get_property" property)))
 
-(defun play-pause ()
+(defun toggle-play ()
   "Toggle playing status"
   (mpv-command "cycle" "pause"))
+
 (defun pause ()
   "Make sure the player is paused"
   (unless (get-mpv-property "pause")
-    (play-pause)))
+    (toggle-play)))
+
 (defun next-song ()
   (condition-notify *playlist-check-update*)
   (mpv-command "playlist-next"))
@@ -101,7 +103,7 @@ threads to go to waste."
       ((and (not (thread-alive-p t1))
             (not (thread-alive-p t2))))))
 
-(defun quit-mpv-and-cleanup ()
+(defun stop-player ()
   (quit-mpv)
   (cleanup))
 
@@ -253,7 +255,7 @@ One of them is the currently playing song."
 (defun playground ()
   (start-mpv "https://www.youtube.com/watch?v=NmyWeOvF_Sg"
              "https://www.youtube.com/watch?v=XFo332Y5uIA")
-  (what-is-playing)
+  (playing-song)
   (quit-mpv)
   (playlist-count)
   (playlist-position)
@@ -264,12 +266,14 @@ One of them is the currently playing song."
   (prev-song)
   (next-song)
   (prev-song)
-  (play-pause)
+  (toggle-play)
   (pause)
+  (quit-mpv-and-cleanup)
   (open-playing-song-in-browser)
   (playing-song-url)
   (setf *shuffle-play* t)
-  (play '("artist" "Aerosmith"))
-  (play '("artist" "Queen"))
-  (play '("artist" "Queen" "album" "Jazz"))
+  (play '("artist" "Pendragon" "album" "Pure") nil)
+  (play '("artist" "Aerosmith") T)
+  (play '("artist" "Queen") T)
+  (play '("artist" "Queen" "album" "Jazz") nil)
   )

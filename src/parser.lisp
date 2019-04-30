@@ -100,7 +100,10 @@
                                  (list "n/a")  ;not all songs have a url
                                  url))))))))
     (list (lastcar (split-sequence #\Space (aref release-date 0)))
-          (remove-if #'null tracks))))
+          (remove-if (lambda (tr)
+                       (or (null tr)
+                           (equalp tr '("n/a"))))
+                     tracks))))
 
 (defun biography (artist)
   (declare (string artist))

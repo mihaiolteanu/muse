@@ -10,6 +10,7 @@
                :do-urlencode
                :yason
                :trivia
+               :mockingbird
                :bt-semaphore
                :dexador
                :plump

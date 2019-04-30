@@ -51,20 +51,21 @@
            with-test-db))
 
 (defpackage :player
-  (:use :cl :trivia :parser :persistence :objects :uiop :bt)
+  (:use :cl :trivia :mockingbird :parser :persistence :objects :uiop :bt)
   (:import-from :alexandria :switch)
   (:import-from :yason :parse)
   (:export play
-           play-songs
            playing?
            playing-song
            playing-songs
            open-playing-song-in-browser
            next-song
            prev-song
-           play-pause
-           quit-mpv
-           seek))
+           toggle-play
+           stop-player
+           with-test-player
+           seek
+           #:*playing-songs*))
 
 (defpackage :server
   (:use :cl :persistence :parser :objects :player :cl-who :hunchentoot))

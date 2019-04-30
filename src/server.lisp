@@ -3,9 +3,9 @@
 (defparameter *port* 4007)
 (load #P"~/muserc.lisp" :if-does-not-exist nil)
 
-(defparameter *pause-button* "⏸")
-(defparameter *play-button* "▶")
-(defparameter *play-pause-button* *play-button*)
+(defparameter *pause-symbol* "⏸")
+(defparameter *play-symbol* "▶")
+(defparameter *play-button* *play-symbol*)
 (defparameter *shuffle-play* nil)
 (defparameter *shuffle-off* "[ ]")
 (defparameter *shuffle-on*  "[s]")
@@ -83,6 +83,9 @@ evey song on the page, since that info can be inferred."
                               (url-name artist-name) (url-name name))
                 (str name))))))
 
+(defun button-link (action)
+  (format nil "/~a?source=~a&redirect=t" action (request-uri*)))
+
 (defmacro standard-page (&body body)
   `(with-html-output-to-string (s)
      (:html
@@ -92,13 +95,12 @@ evey song on the page, since that info can be inferred."
               :href "/css/muse.css"))
       (:body
        (:p :class "play-buttons"
-           (:a :href (conc "/stop?source-uri=" (request-uri*)) "⏹")
-           (:a :href (conc "/previous?source-uri=" (request-uri*)) "⏪")
-           (:a :href (conc "/play-pause?source-uri=" (request-uri*))
-               (str *play-pause-button*))
-           (:a :href (conc "/next?source-uri=" (request-uri*)) "⏩")
+           (:a :href (button-link "stop") "⏹")
+           (:a :href (button-link "previous") "⏪")
+           (:a :href (button-link "play") (str *play-button*))
+           (:a :href (button-link "next") "⏩")
            (:a :class "shuffle-status"
-               :href (conc "/toggle-shuffle?source-uri=" (request-uri*))
+               :href (button-link "toggle-shuffle")
                (str *shuffle-status*)))
        (:p :class "menu-bar"
            (:a :href "/home" "home")
@@ -165,14 +167,16 @@ evey song on the page, since that info can be inferred."
 
 (defun redirect-to-source ()
   "Only redirect back to calling source, when such a source was given"
-  (let ((source-uri (get-parameter "source-uri")))
-    (when source-uri
-      (redirect (url-name source-uri)))))
+  (let ((red (get-parameter "redirect"))
+        (source (get-parameter "source")))
+    (when (and source red)
+      (when (string-equal red "T")
+        (redirect (url-name source))))))
 
-(defun toggle-play-pause-button ()
-  (if (string= *play-pause-button* *play-button*)
-      (setf *play-pause-button* *pause-button*)
-      (setf *play-pause-button* *play-button*)))
+(defun toggle-play-button ()
+  (if (string= *play-button* *play-symbol*)
+      (setf *play-button* *pause-symbol*)
+      (setf *play-button* *play-symbol*)))
 
 (defun split-play-parameter (param)
   ;; First element after splitting will be an empty string; skip it
@@ -180,19 +184,19 @@ evey song on the page, since that info can be inferred."
          param
          :separator "/")))
 
-(defun s-play-pause ()
+(defun s-play ()
   "If already playing, pause it and change the playing buttons state.
 If not, figure out what needs to be played and send it to the player
 as a list of strings. All play requests go to the same url which
-redirects to this function, with the parameter source-uri set to what
+redirects to this function, with the parameter source set to what
 needs to be played."
   (if (playing?)
       (progn
-        (toggle-play-pause-button)
-        (play-pause))
+        (toggle-play-button)
+        (toggle-play))
       (progn
-        (play (split-play-parameter (get-parameter "source-uri")) *shuffle-play*)
-        (toggle-play-pause-button)))
+        (play (split-play-parameter (get-parameter "source")) *shuffle-play*)
+        (toggle-play-button)))
   (redirect-to-source))
 
 (defun s-previous ()
@@ -221,8 +225,8 @@ you need."
 
 (defun s-stop ()
   (when (playing?)
-    (setf *play-pause-button* *play-button*)
-    (quit-mpv))
+    (setf *play-button* *play-symbol*)
+    (stop-player))
   (redirect-to-source))
 
 (defun s-continue-with-video ()
@@ -257,7 +261,7 @@ you need."
                        ("/video" s-continue-with-video)
                        ("/stop" s-stop)
                        ("/previous" s-previous)
-                       ("/play-pause" s-play-pause)
+                       ("/play" s-play)
                        ("/next" s-next)
                        ("/toggle-shuffle" s-shuffle)
                        ("/artists" s-artists)

@@ -198,6 +198,8 @@ fetch them first and then return the results from the db"
                   "The Mars Volta" "King Crimson" "Rush"
                   "Led Zeppelin" "Yes" "Genesis")))))
 
+(in-suite :mpv-tests)
+
 (def-muse-test mpv-starts-and-plays
   "Actually test if mpv is called on startup with correct urls.
 Sleep is needed as mpv is an external program."
@@ -247,7 +249,7 @@ Sleep is needed as mpv is an external program."
     (is (same-songs (playing-song) freak-show))
 
     ;; Quiting muse should close mpv also, clear the list, etc
-    (quit-mpv-and-cleanup)
+    (stop-player)
     (is-false (playing?))
     (is (null (playing-songs)))))
 

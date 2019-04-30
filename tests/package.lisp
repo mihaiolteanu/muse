@@ -3,7 +3,7 @@
    :cl :dexador :plump :lquery
    :fiveam :mockingbird
    :persistence :objects
-   :parser)
+   :parser :player)
   (:shadowing-import-from :dexador :get)
   (:shadowing-import-from :dexador :delete)
   (:export run!
