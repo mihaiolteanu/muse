@@ -159,7 +159,7 @@ evey song on the page, since that info can be inferred."
     (setf album (clean-name album))
     (standard-page
       (:h2 (str (format nil "~a - ~a (album)" album artist)))
-      (let ((alb (find album (artist-albums artist)
+      (let ((alb (find album (artist-albums (artist-from-db artist))
                        :key #'album-name
                        :test #'string=)))
         (when alb

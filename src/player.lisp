@@ -109,7 +109,7 @@ threads to go to waste."
 
 (defun remove-nil-urls (songs)
   (remove-if (lambda (song)
-               (string= (song-url song) "n/a"))
+               (emptyp (song-url song)))
              songs))
 
 (defparameter *playlist-lock* (make-lock))
@@ -268,7 +268,7 @@ One of them is the currently playing song."
   (prev-song)
   (toggle-play)
   (pause)
-  (quit-mpv-and-cleanup)
+  (stop-player)
   (open-playing-song-in-browser)
   (playing-song-url)
   (setf *shuffle-play* t)
