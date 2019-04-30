@@ -301,6 +301,14 @@ Sleep is needed as mpv is an external program."
     (is (equalp (server-status ".playing-song")
                 #("Pendragon - Indigo [13:43]")))
 
+    (print (server-status ".playing-song-lyrics"))
+    ;; Lyrics are also downloaded and saved from web when the song is first played
+    (is (equalp (subseq
+                 ;; Check the first line only
+                 (aref (server-status ".playing-song-lyrics") 0)
+                 8 41)
+                "Never felt too good about my life"))
+
     ;; The playlist contains the first 3 playable songs on the album.
     (mapcar (lambda (playing expected)
               (is (same-songs playing expected)))
