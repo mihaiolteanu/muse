@@ -198,63 +198,6 @@ fetch them first and then return the results from the db"
                   "The Mars Volta" "King Crimson" "Rush"
                   "Led Zeppelin" "Yes" "Genesis")))))
 
-(in-suite :mpv-tests)
-
-(def-muse-test mpv-starts-and-plays
-  "Actually test if mpv is called on startup with correct urls.
-Sleep is needed as mpv is an external program."
-  (let ((indigo     (make-song "Pendragon" "Indigo" "13:43"
-                               "https://www.youtube.com/watch?v=ccr-VkEpE18"))
-        (eraserhead (make-song "Pendragon" "Eraserhead" "9:05"
-                               "https://www.youtube.com/watch?v=gHeWRLugWQA"))
-        (freak-show (make-song "Pendragon" "The Freak Show" "4:11"
-                               "https://www.youtube.com/watch?v=42m2llb0w84"))
-        (is-only-me (make-song "Pendragon" "It's Only Me" "8:16"
-                               "https://www.youtube.com/watch?v=3obNa5BE5MY")))
-
-    ;; Start the player and wait for it to warm up
-    (play '("artist" "Pendragon" "album" "Pure") nil)
-    (sleep 1)
-
-    ;; Is the mpv status returned correctly?
-    (is-true (playing?))
-
-    ;; Begin with the first song on the album
-    (is (same-songs (playing-song) indigo))
-
-    ;; The playlist contains the first 3 playable songs on the album.
-    (mapcar (lambda (playing expected)
-              (is (same-songs playing expected)))
-            (playing-songs)
-            (list indigo eraserhead freak-show))
-
-    ;; Go and play the next song on the album.
-    (next-song) (sleep 1)
-    (is (same-songs (playing-song) eraserhead))
-
-    ;; The playlist should also be updated because muse is set up fetch urls
-    ;; in advance
-    (is (same-songs (fourth (playing-songs)) is-only-me))
-
-    ;; Go to the last playable song and hope nothing crashes in the process
-    (next-song) (sleep 1)
-    (next-song) (sleep 1)
-    (is (same-songs (playing-song) is-only-me))
-    (next-song) (sleep 1)
-    (is (same-songs (playing-song) is-only-me))
-
-    ;; Can we also go back to the previous song?
-    (prev-song)
-    (sleep 1)
-    (is (same-songs (playing-song) freak-show))
-
-    ;; Quiting muse should close mpv also, clear the list, etc
-    (stop-player)
-    (is-false (playing?))
-    (is (null (playing-songs)))))
-
-(in-suite :no-dependency-tests)
-
 (defmacro server-call-expect (url fn expect)
   "I have no fking clue why, on the first call, the play mock is not called.
   That is, the call-times-for play returns zero and the nth-mock-args-for returns nil.
@@ -321,9 +264,59 @@ Sleep is needed as mpv is an external program."
    "/stop"
    'stop-player NIL))
 
+(in-suite :mpv-tests)
+
+(def-muse-test mpv-starts-and-plays
+  "Actually test if mpv is called on startup with correct urls.
+Sleep is needed as mpv is an external program."
+  (let ((indigo     (make-song "Pendragon" "Indigo" "13:43"
+                               "https://www.youtube.com/watch?v=ccr-VkEpE18"))
+        (eraserhead (make-song "Pendragon" "Eraserhead" "9:05"
+                               "https://www.youtube.com/watch?v=gHeWRLugWQA"))
+        (freak-show (make-song "Pendragon" "The Freak Show" "4:11"
+                               "https://www.youtube.com/watch?v=42m2llb0w84"))
+        (is-only-me (make-song "Pendragon" "It's Only Me" "8:16"
+                               "https://www.youtube.com/watch?v=3obNa5BE5MY")))
+
+    ;; Start the player and wait for it to warm up
+    (play '("artist" "Pendragon" "album" "Pure") nil)
+    (sleep 1)
+
+    ;; Is the mpv status returned correctly?
+    (is-true (playing?))
+
+    ;; Begin with the first song on the album
+    (is (same-songs (playing-song) indigo))
+
+    ;; The playlist contains the first 3 playable songs on the album.
+    (mapcar (lambda (playing expected)
+              (is (same-songs playing expected)))
+            (playing-songs)
+            (list indigo eraserhead freak-show))
+
+    ;; Go and play the next song on the album.
+    (next-song) (sleep 1)
+    (is (same-songs (playing-song) eraserhead))
+
+    ;; The playlist should also be updated because muse is set up fetch urls
+    ;; in advance
+    (is (same-songs (fourth (playing-songs)) is-only-me))
+
+    ;; Go to the last playable song and hope nothing crashes in the process
+    (next-song) (sleep 1)
+    (next-song) (sleep 1)
+    (is (same-songs (playing-song) is-only-me))
+    (next-song) (sleep 1)
+    (is (same-songs (playing-song) is-only-me))
+
+    ;; Can we also go back to the previous song?
+    (prev-song)
+    (sleep 1)
+    (is (same-songs (playing-song) freak-show))
+
+    ;; Quiting muse should close mpv also, clear the list, etc
+    (stop-player)
+    (is-false (playing?))
+    (is (null (playing-songs)))))
+
 (setf 5am:*run-test-when-defined* T)
-
-;; (run!)
-
-;; (progn (ql:quickload :muse)
-;;        (ql:quickload :muse/tests))
