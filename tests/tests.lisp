@@ -266,6 +266,10 @@ fetch them first and then return the results from the db"
 
 (in-suite :mpv-tests)
 
+(defun server-status (item)
+  (let ((node (parse-html (build-url "home"))))
+    ($ node item (text))))
+
 (def-muse-test mpv-starts-and-plays
   "Actually test if mpv is called on startup with correct urls.
 Sleep is needed as mpv is an external program."
@@ -278,15 +282,24 @@ Sleep is needed as mpv is an external program."
         (is-only-me (make-song "Pendragon" "It's Only Me" "8:16"
                                "https://www.youtube.com/watch?v=3obNa5BE5MY")))
 
+    ;; Player and server both return the correct playing status
+    (is-false (playing?))
+    (is (equalp (server-status ".player-status")
+                #("stopped")))
+
     ;; Start the player and wait for it to warm up
     (play '("artist" "Pendragon" "album" "Pure") nil)
     (sleep 1)
 
     ;; Is the mpv status returned correctly?
     (is-true (playing?))
+    (is (equalp (server-status ".player-status")
+                #("playing")))
 
     ;; Begin with the first song on the album
     (is (same-songs (playing-song) indigo))
+    (is (equalp (server-status ".playing-song")
+                #("Pendragon - Indigo [13:43]")))
 
     ;; The playlist contains the first 3 playable songs on the album.
     (mapcar (lambda (playing expected)
