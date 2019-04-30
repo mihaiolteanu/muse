@@ -1,13 +1,22 @@
 (in-package :muse-tests)
 
-(def-suite :all-tests)
-(in-suite :all-tests)
-
 (defmacro def-muse-test (name &body body)
   `(test ,name
      (with-test-db
        (with-local-htmls
          ,@body))))
+
+(def-suite :all-tests)
+
+(def-suite :mpv-tests
+  :description "Test the mpv interaction: opening with correct urls, adding songs, etc."
+  :in :all-tests)
+
+(def-suite :no-dependency-tests
+  :description "Tests that don't depend on external programs"
+  :in :all-tests)
+
+(in-suite :no-dependency-tests)
 
 (def-muse-test artist-parse-from-html-page
   (let* ((pendragon (new-artist "Pendragon"))
@@ -241,6 +250,74 @@ Sleep is needed as mpv is an external program."
     (quit-mpv-and-cleanup)
     (is-false (playing?))
     (is (null (playing-songs)))))
+
+(in-suite :no-dependency-tests)
+
+(defmacro server-call-expect (url fn expect)
+  "I have no fking clue why, on the first call, the play mock is not called.
+  That is, the call-times-for play returns zero and the nth-mock-args-for returns nil.
+  On the second run, the call-times for play is 2 and the args are correct.
+  I have verified that the player is correctly called every time I call the server
+  url, so no clue what is going on. Hack: call the same stuff twice, the first one
+  for warm-up, the second time for actuall testing."
+  `(progn
+     (with-dynamic-mocks (play next-song prev-song stop-player)
+       (parse-html (build-url (format nil "play?source=~a" ,url))))
+     (with-dynamic-mocks (play next-song prev-song stop-player)
+       (parse-html (build-url (format nil "play?source=~a" ,url)))
+       (is (equal (nth-mock-args-for 1 ,fn)
+                  ,expect)))
+     (clear-calls)))
+
+(def-muse-test server-player-start
+  ;; Start the player with different sources. The source of playable items
+  ;; it's in the parameter attached to the /play url. After calling this url
+  ;; the play function in the player package should receive the correct playable
+  ;; items. What the player does after that is not this test's business. As a result,
+  ;; mock the play function and only test if it's called with the correct parameters.
+  (server-call-expect
+   "/song/Pendragon/out+of+this+world"
+   'play '(("song" "Pendragon" "out of this world") NIL))
+  
+  (server-call-expect
+   "/artist/Pendragon"
+   'play '(("artist" "Pendragon") NIL))
+
+  (server-call-expect
+   "/similar/Pendragon"
+   'play '(("similar" "Pendragon") NIL))
+
+  (server-call-expect
+   "/artist/Pendragon/album/Pure"
+   'play '(("artist" "Pendragon" "album" "Pure") NIL))
+
+  (server-call-expect
+   "/tag/rock"
+   'play '(("tag" "rock") NIL))
+
+  ;; Set shuffle on and expect play to be called with toggle param set to true
+  (parse-html (build-url "toggle-shuffle"))
+  (server-call-expect "/tag/rock"
+                      'play '(("tag" "rock") t))
+
+  ;; Turn shuffle off again
+  (parse-html (build-url "toggle-shuffle"))
+  (server-call-expect
+   "/tag/rock"
+   'play '(("tag" "rock") NIL))
+
+  ;; Other player functionality
+  (server-call-expect
+   "/next"
+   'next-song NIL)
+  
+  (server-call-expect
+   "/previous"
+   'prev-song NIL)
+
+  (server-call-expect
+   "/stop"
+   'stop-player NIL))
 
 (setf 5am:*run-test-when-defined* T)
 
