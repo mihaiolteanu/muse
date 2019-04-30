@@ -158,8 +158,8 @@ to the db if they're not already there. "
             (when (emptyp (song-lyrics s))
               (if-let ((lyrics (song-lyrics-from-web (song-artist-name s)
                                                      (song-name s))))
-                (save-song-lyrics lyrics (song-url s))
-                (setf (song-lyrics s) lyrics)))
+                (progn (save-song-lyrics lyrics (song-url s))
+                       (setf (song-lyrics s) lyrics))))
             (setf *playing-songs*
                   (append *playing-songs* (list s))))
           songs))
