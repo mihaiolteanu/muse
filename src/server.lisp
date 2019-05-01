@@ -39,18 +39,21 @@
 (defmacro display-songs (songs &key (with-artist nil))
   "We don't need to display the artist name all the time for
 evey song on the page, since that info can be inferred."
-  `(dolist (song ,songs)
-     (let ((name (song-name song)))
-       (htm (:a :class "song"
-                :href (song-url song)
-                (str
-                 ,(if with-artist
-                      `(format nil  "~a - ~a "
-                               (song-artist-name song)
-                               (song-name song))
-                      `(format nil "~a" (song-name song)))))
-            (str (format nil "[~a]" (song-duration song)))
-            (:br)))))
+  `(htm
+    (:div :style "text-align: center"
+          (:div :style "display: inline-block; text-align:left"
+                (dolist (song ,songs)
+                  (let ((name (song-name song)))
+                    (htm (:a :class "song"
+                             :href (song-url song)
+                             (str
+                              ,(if with-artist
+                                   `(format nil  "~a - ~a "
+                                            (song-artist-name song)
+                                            (song-name song))
+                                   `(format nil "~a" (song-name song)))))
+                         (str (format nil "[~a]" (song-duration song)))
+                         (:br))))))))
 
 (defmacro display-artists (artists)
   `(dolist (artist ,artists)
