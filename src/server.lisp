@@ -126,28 +126,28 @@ evey song on the page, since that info can be inferred."
         (htm
          (:div :class "player-status" (str "stopped"))))))
 
-(defun s-artists ()
+(defun artists-page ()
   (standard-page
     (:h2 "Available Artists")
     (display-artists (all-artists))))
 
-(defun s-songs ()
+(defun songs-page ()
   (standard-page
     (:h2 "All Database Songs")
     (display-songs (all-songs) :with-artist t)))
 
-(defun s-tags ()
+(defun tags-page ()
   (standard-page
     (:h2 "Available Tags")
     (display-tags (all-genres))))
 
-(defun s-tag-artists ()
+(defun tag-artists-page ()
   (let ((tag (tag-from-uri)))
     (standard-page
       (:h2 (str (format nil "Artists with the ~a tag" tag)))
       (display-artists (all-genre-artists tag)))))
 
-(defun s-artist-info ()
+(defun artist-info-page ()
   (let* ((artist-name (artist-from-uri))
          (artist (artist-from-db artist-name)))
     (standard-page
@@ -161,7 +161,7 @@ evey song on the page, since that info can be inferred."
       (display-songs (artist-songs artist))
       )))
 
-(defun s-artist-album ()
+(defun artist-album-page ()
   (multiple-value-bind (artist album)
       (artist-and-album-from-uri)
     (setf artist (clean-name artist))
@@ -193,7 +193,7 @@ evey song on the page, since that info can be inferred."
          param
          :separator "/")))
 
-(defun s-play ()
+(defun play-page ()
   "If already playing, pause it and change the playing buttons state.
 If not, figure out what needs to be played and send it to the player
 as a list of strings. All play requests go to the same url which
@@ -208,17 +208,17 @@ needs to be played."
         (toggle-play-button)))
   (redirect-to-source))
 
-(defun s-previous ()
+(defun previous-page ()
   (when (playing?)
     (prev-song))
   (redirect-to-source))
 
-(defun s-next ()
+(defun next-page ()
   (when (playing?)
     (next-song))
   (redirect-to-source))
 
-(defun s-shuffle ()
+(defun shuffle-page ()
   "Toggle the shuffle status, but only if player is not already started.
 Stop, change the shuffle status and restart the player if that's what
 you need."
@@ -232,13 +232,13 @@ you need."
           (setf *shuffle-status* *shuffle-on*))))
   (redirect-to-source))
 
-(defun s-stop ()
+(defun stop-page ()
   (when (playing?)
     (setf *play-button* *play-symbol*)
     (stop-player))
   (redirect-to-source))
 
-(defun s-continue-with-video ()
+(defun continue-with-video-page ()
   (when (playing?)
     (open-playing-song-in-browser)))
 
@@ -251,13 +251,15 @@ you need."
 (setq *dispatch-table*
       (nconc (list              
               (create-regex-dispatcher
-               "^/artist/[a-zA-Z0-9 ]+$" 's-artist-info)
+               "^/artist/[a-zA-Z0-9 ]+$" 'artist-info-page)
               (create-regex-dispatcher
-               "^/artist/[a-zA-Z0-9 ]+/album/[a-zA-Z0-9 ]+$" 's-artist-album)
+               "^/artist/[a-zA-Z0-9 ]+/album/[a-zA-Z0-9 ]+$" 'artist-album-page)
               (create-regex-dispatcher
                "^/similar/[a-zA-Z0-9 ]+$" (lambda () (print "ignore")))
               (create-regex-dispatcher
-               "^/tag/[a-zA-Z0-9 ]+$" 's-tag-artists)
+               "^/tag/[a-zA-Z0-9 ]+$" 'tag-artists-page)
+              (create-regex-dispatcher
+               "^/lyrics/[a-zA-Z0-9 ]+$" 'songs-from-lyrics-page)
               (create-folder-dispatcher-and-handler "/img/"
                (merge-pathnames (make-pathname :directory '(:relative "img"))
                                 *base-directory*))
@@ -267,16 +269,16 @@ you need."
              (mapcar (lambda (args)
                        (apply 'create-prefix-dispatcher args))
                      '(("/home" server-status)
-                       ("/video" s-continue-with-video)
-                       ("/stop" s-stop)
-                       ("/previous" s-previous)
-                       ("/play" s-play)
-                       ("/next" s-next)
-                       ("/toggle-shuffle" s-shuffle)
-                       ("/artists" s-artists)
-                       ("/songs" s-songs)
-                       ("/tags" s-tags)
-                       ("/genres" s-genres)))))
+                       ("/video" continue-with-video-page)
+                       ("/stop" stop-page)
+                       ("/previous" previous-page)
+                       ("/play" play-page)
+                       ("/next" next-page)
+                       ("/toggle-shuffle" shuffle-page)
+                       ("/artists" artists-page)
+                       ("/songs" songs-page)
+                       ("/tags" tags-page)
+                       ("/genres" genres-page)))))
 
 ;; (hunchentoot:start (make-instance 'hunchentoot:easy-acceptor :port 4123))
 ;; (asdf:oos 'asdf:load-op :hunchentoot-test)
