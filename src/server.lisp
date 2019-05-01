@@ -108,6 +108,7 @@ evey song on the page, since that info can be inferred."
        (:p :class "menu-bar"
            (:a :href "/home" "home")
            (:a :href "/artists" "artists")
+           (:a :href "/songs" "songs")
            (:a :href "/tags" "tags"))
        ,@body))))
 
@@ -129,6 +130,11 @@ evey song on the page, since that info can be inferred."
   (standard-page
     (:h2 "Available Artists")
     (display-artists (all-artists))))
+
+(defun s-songs ()
+  (standard-page
+    (:h2 "All Database Songs")
+    (display-songs (all-songs) :with-artist t)))
 
 (defun s-tags ()
   (standard-page
@@ -268,6 +274,7 @@ you need."
                        ("/next" s-next)
                        ("/toggle-shuffle" s-shuffle)
                        ("/artists" s-artists)
+                       ("/songs" s-songs)
                        ("/tags" s-tags)
                        ("/genres" s-genres)))))
 
