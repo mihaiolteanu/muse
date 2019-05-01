@@ -51,8 +51,10 @@ evey song on the page, since that info can be inferred."
                                    `(format nil  "~a - ~a "
                                             (song-artist-name song)
                                             (song-name song))
-                                   `(format nil "~a" (song-name song)))))
-                         (str (format nil "[~a]" (song-duration song)))
+                                   `(format nil "~a" (song-name song))))
+                             ;; Additional href string to add to the link
+                             (unless (uiop:emptyp ,string)
+                               (str (format nil "| ~a" ,string))))
                          (:br))))))))
 
 (defmacro display-artists (artists)
