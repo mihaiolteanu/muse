@@ -7,7 +7,7 @@
   "If true, the next song is chosen at random.")
 (defconstant +playlist-buffer+ 2
   "Number of songs availalble in the playlist after the current one")
-(defconstant +buffer-check-timeout+ 60
+(defconstant *buffer-check-timeout* 60
   "Number of seconds before checking the playlist buffer and adding
 new songs if buffer too small.")
 (defparameter *playing-songs* '())
