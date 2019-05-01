@@ -131,6 +131,22 @@ If artist doesn't exist, go fetch it, add it to db and retry."
   (make-song (first raw-song) (third raw-song) (fifth raw-song)
              (fourth raw-song) :lyrics (sixth raw-song)))
 
+(defun artist-song-from-db (artist song)
+  (if-let ((result
+            (db-get "*" "all_songs"
+                    (format nil "artist=\"~a\" AND song=\"~a\""
+                            artist song))))
+    (when result
+      (song-from-all-songs-view (first result)))))
+
+(defun songs-from-lyrics (lyrics)
+  "Given a string, return all songs with lyrics that match the given
+string."
+  (if-let ((songs (db-get "*" "all_songs"
+                          (format nil "lyrics like '%~a%'" lyrics))))
+    (mapcar #'song-from-all-songs-view
+            (remove-duplicates songs :test #'string= :key #'sixth))))
+
 ;; Insert into db
 (defun execute (template &rest values)
   (execute-non-query *db*

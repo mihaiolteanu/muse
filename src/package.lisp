@@ -47,12 +47,15 @@
            all-genre-artists
            artist-from-db
            insert-artist
+           songs-from-lyrics
+           artist-song-from-db
            save-song-lyrics
            with-test-db))
 
 (defpackage :player
   (:use :cl :trivia :mockingbird :parser :persistence :objects :uiop :bt)
   (:import-from :alexandria :switch)
+  (:import-from :cl-utilities :split-sequence)
   (:import-from :yason :parse)
   (:export play
            playing?
@@ -69,4 +72,6 @@
 
 (defpackage :server
   (:use :cl :persistence :parser :objects :player :cl-who :hunchentoot)
-  (:import-from :cl-utilities :split-sequence))
+  (:import-from :cl-utilities :split-sequence)
+  (:export
+   #:display-songs))

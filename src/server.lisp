@@ -36,7 +36,7 @@
     (values (third seq)
             (fifth seq))))
 
-(defmacro display-songs (songs &key (with-artist nil))
+(defmacro display-songs (songs &key (string "") (with-artist nil))
   "We don't need to display the artist name all the time for
 evey song on the page, since that info can be inferred."
   `(htm
@@ -148,6 +148,20 @@ evey song on the page, since that info can be inferred."
     (standard-page
       (:h2 (str (format nil "Artists with the ~a tag" tag)))
       (display-artists (all-genre-artists tag)))))
+
+(defun song-verse-line (song str)
+  "Return the verse line from the song lyrics that contains the string."
+  (find str (split-sequence #\Newline (song-lyrics song))
+        :test (lambda (str line)
+                (search str line :test #'string-equal))))
+
+(defun songs-from-lyrics-page ()
+  (let ((lyrics (tag-from-uri)))
+    (standard-page
+      (:h2 (str (format nil "Song entries for ~a" lyrics)))
+      (display-songs (songs-from-lyrics (clean-name lyrics))
+                     :string (song-verse-line song (clean-name lyrics))
+                     :with-artist t))))
 
 (defun artist-info-page ()
   (let* ((artist-name (artist-from-uri))
