@@ -25,14 +25,14 @@
 
 (defun artist-from-uri ()
   (clean-name
-   (first (last (cl-utilities:split-sequence #\/ (request-uri*))))))
+   (first (last (split-sequence #\/ (request-uri*))))))
 
 (defun tag-from-uri ()
   (clean-name
-   (first (last (cl-utilities:split-sequence #\/ (request-uri*))))))
+   (first (last (split-sequence #\/ (request-uri*))))))
 
 (defun artist-and-album-from-uri ()
-  (let ((seq (cl-utilities:split-sequence #\/ (request-uri*))))
+  (let ((seq (split-sequence #\/ (request-uri*))))
     (values (third seq)
             (fifth seq))))
 
