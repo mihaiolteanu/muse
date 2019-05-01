@@ -69,9 +69,7 @@
 
 (defun all-songs ()
   "All available songs from db."
-  (mapcar (lambda (song)
-            (make-song (first song) (third song) (fifth song) (fourth song)
-                       :lyrics (sixth song)))
+  (mapcar #'song-from-all-songs-view
           (db-all-songs)))
 
 (defun album-songs-from-album-id (album-id artist)
@@ -128,6 +126,10 @@ If artist doesn't exist, go fetch it, add it to db and retry."
       (progn
         (insert-artist (new-artist artist))
         (artist-from-db artist))))
+
+(defun song-from-all-songs-view (raw-song)
+  (make-song (first raw-song) (third raw-song) (fifth raw-song)
+             (fourth raw-song) :lyrics (sixth raw-song)))
 
 ;; Insert into db
 (defun execute (template &rest values)
