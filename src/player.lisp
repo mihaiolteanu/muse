@@ -232,6 +232,8 @@ playing list. Songs is defined in the calling function "
   (trivia:match what
     ((list "artist" artist)
      (play-single-artist (artist-from-db artist)))
+    ((list "song" url)
+     (start-mpv (format nil "https://www.youtube.com/~a" url)))
     ((list "similar" artist)
      (play-artists (artist-similar (artist-from-db artist))))
     ((list "tag" tag)
