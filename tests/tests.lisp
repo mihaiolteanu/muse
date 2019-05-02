@@ -299,7 +299,7 @@ Sleep is needed as mpv is an external program."
     ;; Begin with the first song on the album
     (is (same-songs (playing-song) indigo))
     (is (equalp (server-status ".playing-song")
-                #("Pendragon - Indigo [13:43]")))
+                #("Pendragon - Indigo ")))
 
     ;; Lyrics are also downloaded and saved from web when the song is first played
     (is (equalp (subseq
