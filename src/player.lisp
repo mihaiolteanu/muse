@@ -84,7 +84,7 @@ new songs if buffer too small.")
 (defun start-mpv (&rest urls)
   (launch-program
     (format nil
-            "mpv --log-file=/home/mihai/quicklisp/local-projects/muse/mpvlog --msg-level=all=trace -ytdl-format=best --vid=no --input-ipc-server=~a ~{~a ~}"
+            "mpv --log-file=~/quicklisp/local-projects/muse/mpvlog --msg-level=all=trace -ytdl-format=best --vid=no --input-ipc-server=~a ~{~a ~}"
             *mpvsocket* urls)))
 
 (defun quit-mpv ()
